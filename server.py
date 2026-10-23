@@ -33,6 +33,7 @@ KNOWLEDGE_DIR = BASE_DIR / "知识库"
 INDEX_FILE = BASE_DIR / "index.html"
 HISTORY_DIR = BASE_DIR / "训练历史"
 REPORT_DIR = HISTORY_DIR / "报告"
+PROFILE_FILE = BASE_DIR / "个人设置.json"
 
 PORT = 8766
 MODEL = "qwen-audio-3.0-realtime-plus"
@@ -60,14 +61,14 @@ KNOWLEDGE_MAX_CHARS = 20000
 TEXT_EXTS = {".md", ".txt", ".markdown"}
 
 
-def load_key() -> str:
-    """从 macOS Keychain 读取 API key，绝不硬编码。"""
+def load_key():
+    """从 macOS Keychain 读取 API key。缺失时返回 None（不退出，进入设置流程）。"""
     r = subprocess.run(
         ["security", "find-generic-password", "-s", KEYCHAIN_SERVICE, "-w"],
         capture_output=True, text=True,
     )
     if r.returncode != 0:
-        raise SystemExit(f"无法从 Keychain 读取 API key（service={KEYCHAIN_SERVICE}）")
+        return None
     return r.stdout.strip()
 
 
@@ -109,6 +110,39 @@ def extract_text_file(path: pathlib.Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace")
 
 
+DEFAULT_PROFILE = {
+    "english_level": "CET-4（四级，中等水平）",
+    "goal": "商务口语（销售、市场、客户沟通）",
+    "profession": "轮胎销售/市场（米其林）",
+    "hobbies": "爬山、炒股",
+}
+
+
+def load_profile() -> dict:
+    """读取个人设置 JSON，不存在或损坏则返回默认。"""
+    if PROFILE_FILE.exists():
+        try:
+            data = json.loads(PROFILE_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return {**DEFAULT_PROFILE, **data}
+        except Exception:
+            pass
+    return dict(DEFAULT_PROFILE)
+
+
+def save_profile(data: dict) -> None:
+    """保存个人设置 JSON（只保留四个已知字段）。"""
+    profile = {
+        "english_level": (data.get("english_level") or "").strip(),
+        "goal": (data.get("goal") or "").strip(),
+        "profession": (data.get("profession") or "").strip(),
+        "hobbies": (data.get("hobbies") or "").strip(),
+    }
+    PROFILE_FILE.write_text(
+        json.dumps(profile, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
 def load_knowledge():
     """扫描知识库文件夹，按类型提取文本，返回 (拼接文本, 文件名列表)。"""
     if not KNOWLEDGE_DIR.is_dir():
@@ -138,12 +172,20 @@ def load_knowledge():
 
 
 def build_instructions():
-    """拼接 instructions = 人设 + 知识库文件夹内容。返回 (instructions, meta)。"""
+    """拼接 instructions = 人设 + 个人设置 + 知识库文件夹内容。返回 (instructions, meta)。"""
     persona = PERSONA_FILE.read_text(encoding="utf-8").strip()
+    profile = load_profile()
     knowledge, knowledge_files = load_knowledge()
     meta = {"knowledge_files": knowledge_files, "knowledge_truncated": False}
 
     instructions = persona
+    instructions += (
+        "\n\n# About your student (use this to personalize every lesson)\n"
+        f"- English level: {profile.get('english_level', '')}\n"
+        f"- Learning goal: {profile.get('goal', '')}\n"
+        f"- Profession: {profile.get('profession', '')}\n"
+        f"- Hobbies: {profile.get('hobbies', '')}"
+    )
     if knowledge.strip():
         instructions += (
             "\n\n# 学生的本地知识库（以下为用户提供的资料，"
@@ -380,6 +422,8 @@ class Handler(BaseHTTPRequestHandler):
                 "model": MODEL,
                 "voice": VOICE,
                 "instructions": instructions,
+                "has_key": Handler.api_key is not None,
+                "profile": load_profile(),
                 **meta,
             }, ensure_ascii=False).encode("utf-8")
             self._send(200, payload, "application/json; charset=utf-8")
@@ -405,6 +449,12 @@ class Handler(BaseHTTPRequestHandler):
             return
         if self.path == "/summarize":
             self._handle_summarize()
+            return
+        if self.path == "/save-key":
+            self._handle_save_key()
+            return
+        if self.path == "/save-profile":
+            self._handle_save_profile()
             return
         if self.path != "/signal":
             self._send(404, b"not found", "text/plain; charset=utf-8")
@@ -532,9 +582,48 @@ class Handler(BaseHTTPRequestHandler):
             body = json.dumps({"error": str(e)}, ensure_ascii=False).encode("utf-8")
             self._send(500, body, "application/json; charset=utf-8")
 
+    def _handle_save_key(self):
+        """接收 API key，存入 macOS Keychain（不落明文到文件）。"""
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length)
+            req = json.loads(body.decode("utf-8"))
+            key = (req.get("key") or "").strip()
+            if not key:
+                self._send(400, b'{"error":"empty key"}', "application/json; charset=utf-8")
+                return
+            r = subprocess.run(
+                ["security", "add-generic-password", "-U", "-s", KEYCHAIN_SERVICE,
+                 "-a", os.environ.get("USER", "user"), "-w", key],
+                capture_output=True, text=True,
+            )
+            if r.returncode != 0:
+                self._send(500, json.dumps({"error": r.stderr.strip()}, ensure_ascii=False).encode("utf-8"),
+                           "application/json; charset=utf-8")
+                return
+            Handler.api_key = key  # 更新内存中的 key，立即生效
+            self._send(200, b'{"ok":true}', "application/json; charset=utf-8")
+        except Exception as e:
+            body = json.dumps({"error": str(e)}, ensure_ascii=False).encode("utf-8")
+            self._send(500, body, "application/json; charset=utf-8")
+
+    def _handle_save_profile(self):
+        """接收个人信息，存本地 JSON。"""
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length)
+            req = json.loads(body.decode("utf-8"))
+            save_profile(req)
+            self._send(200, b'{"ok":true}', "application/json; charset=utf-8")
+        except Exception as e:
+            body = json.dumps({"error": str(e)}, ensure_ascii=False).encode("utf-8")
+            self._send(500, body, "application/json; charset=utf-8")
+
 
 def main():
     Handler.api_key = load_key()
+    if Handler.api_key is None:
+        print("[提示] 未检测到 API Key，打开浏览器后在设置里输入。")
     instructions, meta = build_instructions()
     print(f"知识库文件：{meta['knowledge_files']}")
     if meta["knowledge_truncated"]:

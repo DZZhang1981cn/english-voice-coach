@@ -46,6 +46,11 @@
   .prep-section textarea { width: 100%; font-family: inherit; font-size: 13px; padding: 10px; border: 1px solid #e5e6eb;
     border-radius: 8px; resize: vertical; min-height: 90px; }
   .prep-section textarea:focus { outline: none; border-color: #165dff; }
+  .prep-section input[type="text"], .prep-section input[type="password"] {
+    width: 100%; font-family: inherit; font-size: 13px; padding: 8px 10px;
+    border: 1px solid #e5e6eb; border-radius: 8px; margin-bottom: 6px;
+  }
+  .prep-section input:focus { outline: none; border-color: #165dff; }
   .prep-section button { width: 100%; margin-top: 8px; }
   .summary-box { margin-top: 8px; font-size: 12px; color: #4e5969; background: #f7f8fa; border-radius: 8px; padding: 10px;
     white-space: pre-wrap; word-break: break-word; min-height: 20px; }
@@ -164,6 +169,20 @@
         <div class="file-list" id="fileList"></div>
       </div>
 
+      <button id="settingsBtn" class="btn-ghost" style="width:100%;margin-bottom:8px;">⚙️ 设置（API Key / 个人信息）</button>
+      <div class="prep-section" id="settingsPanel" style="display:none;">
+        <label>API Key（百炼 Token Plan，存 macOS Keychain）</label>
+        <input type="password" id="apiKeyInput" placeholder="sk-sp-..." />
+        <button id="saveKeyBtn">💾 保存 Key</button>
+
+        <label style="margin-top:10px;">个人信息（教练据此个性化教学）</label>
+        <input type="text" id="profileLevel" placeholder="英语水平，如 CET-4（四级）" />
+        <input type="text" id="profileGoal" placeholder="学习目标，如 商务口语" />
+        <input type="text" id="profileProfession" placeholder="职业，如 轮胎销售/市场（米其林）" />
+        <input type="text" id="profileHobbies" placeholder="爱好，如 爬山、炒股" />
+        <button id="saveProfileBtn">💾 保存个人信息</button>
+      </div>
+
       <button id="confirmBtn" class="btn-primary">✅ 确认开始训练</button>
     </div>
 
@@ -235,6 +254,15 @@ const summaryBox = document.getElementById('summaryBox');
 const fileInput = document.getElementById('fileInput');
 const fileList = document.getElementById('fileList');
 const confirmBtn = document.getElementById('confirmBtn');
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsPanel = document.getElementById('settingsPanel');
+const apiKeyInput = document.getElementById('apiKeyInput');
+const saveKeyBtn = document.getElementById('saveKeyBtn');
+const saveProfileBtn = document.getElementById('saveProfileBtn');
+const profileLevel = document.getElementById('profileLevel');
+const profileGoal = document.getElementById('profileGoal');
+const profileProfession = document.getElementById('profileProfession');
+const profileHobbies = document.getElementById('profileHobbies');
 
 let pc = null;
 let config = null;
@@ -571,6 +599,48 @@ summarizeBtn.onclick = async () => {
   } catch (e) { summaryBox.textContent = '整理失败：' + e.message; }
 };
 
+// ---- 设置（API Key + 个人信息）----
+settingsBtn.onclick = () => {
+  settingsPanel.style.display = settingsPanel.style.display === 'none' ? '' : 'none';
+};
+
+function fillSettings(hasKey, profile) {
+  profile = profile || {};
+  if (!hasKey) {
+    settingsPanel.style.display = '';
+    appendSys('⚠️ 未检测到 API Key，请在设置里输入你的百炼 key');
+  }
+  apiKeyInput.placeholder = hasKey ? '已配置（留空则不改）' : '输入你的百炼 Token Plan key（sk-sp-...）';
+  profileLevel.value = profile.english_level || '';
+  profileGoal.value = profile.goal || '';
+  profileProfession.value = profile.profession || '';
+  profileHobbies.value = profile.hobbies || '';
+}
+
+saveKeyBtn.onclick = async () => {
+  const key = apiKeyInput.value.trim();
+  if (!key) { appendSys('请输入 API Key'); return; }
+  try {
+    const resp = await fetch('/save-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) });
+    if (resp.ok) { appendSys('✅ Key 已保存到 Keychain'); apiKeyInput.value = ''; }
+    else { const e = await resp.json().catch(() => ({})); appendSys('⚠️ 保存 Key 失败：' + (e.error || '')); }
+  } catch (err) { appendSys('⚠️ 保存 Key 失败：' + err.message); }
+};
+
+saveProfileBtn.onclick = async () => {
+  const profile = {
+    english_level: profileLevel.value,
+    goal: profileGoal.value,
+    profession: profileProfession.value,
+    hobbies: profileHobbies.value,
+  };
+  try {
+    const resp = await fetch('/save-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });
+    if (resp.ok) appendSys('✅ 个人信息已保存（下次对话生效）');
+    else appendSys('⚠️ 保存个人信息失败');
+  } catch (err) { appendSys('⚠️ 保存个人信息失败：' + err.message); }
+};
+
 confirmBtn.onclick = () => {
   if (pc) return;
   const requirement = requirementInput.value.trim();
@@ -643,6 +713,7 @@ async function startSession() {
   setStatus('加载配置…', 'connecting');
   try {
     config = await fetch('/config').then(r => r.json());
+    fillSettings(config.has_key, config.profile);
     if (config.knowledge_truncated) appendSys('⚠ 知识库过长已截断，部分内容未注入');
     setStatus('请求麦克风权限…', 'connecting');
 
