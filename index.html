@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>私人英语教练 · Coach Alex</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", sans-serif;
+    background: #f5f7fa; color: #1d2129; line-height: 1.6;
+    min-height: 100vh; padding: 24px 16px;
+  }
+  .container { max-width: 1460px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #86909c; margin-bottom: 16px; }
+
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  button {
+    padding: 8px 16px; font-size: 13px; font-weight: 500; border: 1px solid #c9cdd4;
+    border-radius: 8px; background: #fff; color: #1d2129; cursor: pointer; transition: all .15s;
+  }
+  button:hover:not(:disabled) { border-color: #165dff; color: #165dff; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-primary { background: #165dff; border-color: #165dff; color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: #4080ff; border-color: #4080ff; color: #fff; }
+  .btn-danger { border-color: #f53f3f; color: #f53f3f; }
+  .btn-danger:hover:not(:disabled) { background: #f53f3f; color: #fff; }
+  .btn-ghost { color: #4e5969; }
+
+  .status-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px;
+    background: #fff; border: 1px solid #e5e6eb; font-size: 13px; margin-bottom: 16px; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #c9cdd4; flex-shrink: 0; }
+  .status-dot.connected { background: #00b42a; }
+  .status-dot.connecting { background: #ff7d00; animation: pulse 1s infinite; }
+  .status-dot.error { background: #f53f3f; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+  .main { display: flex; gap: 16px; align-items: flex-start; }
+
+  /* 左：课前准备 */
+  .prep-panel { width: 280px; flex-shrink: 0; background: #fff; border: 1px solid #e5e6eb; border-radius: 12px; padding: 16px; }
+  .prep-panel .panel-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .prep-section { margin-bottom: 16px; }
+  .prep-section label { display: block; font-size: 12px; color: #4e5969; margin-bottom: 6px; font-weight: 500; }
+  .prep-section textarea { width: 100%; font-family: inherit; font-size: 13px; padding: 10px; border: 1px solid #e5e6eb;
+    border-radius: 8px; resize: vertical; min-height: 90px; }
+  .prep-section textarea:focus { outline: none; border-color: #165dff; }
+  .prep-section button { width: 100%; margin-top: 8px; }
+  .summary-box { margin-top: 8px; font-size: 12px; color: #4e5969; background: #f7f8fa; border-radius: 8px; padding: 10px;
+    white-space: pre-wrap; word-break: break-word; min-height: 20px; }
+  .summary-box:empty { display: none; }
+  .file-list { margin-top: 8px; }
+  .file-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #4e5969; padding: 4px 8px;
+    background: #f7f8fa; border-radius: 6px; margin-bottom: 4px; word-break: break-all; }
+  .file-item .rm { margin-left: auto; color: #f53f3f; cursor: pointer; flex-shrink: 0; font-weight: 700; }
+  #confirmBtn { width: 100%; padding: 12px; font-size: 14px; }
+
+  /* 中：聊天框（可折叠） */
+  .chat-panel { flex: 1; min-width: 0; }
+  .chat { background: #fff; border: 1px solid #e5e6eb; border-radius: 12px; padding: 16px;
+    min-height: 320px; max-height: 72vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  .chat-empty { color: #c9cdd4; font-size: 13px; text-align: center; margin: auto; }
+  .msg { max-width: 82%; padding: 10px 14px; border-radius: 12px; font-size: 15px; white-space: pre-wrap; word-break: break-word; }
+  .msg-user { align-self: flex-end; background: #165dff; color: #fff; border-bottom-right-radius: 4px; }
+  .msg-coach { align-self: flex-start; background: #f2f3f5; color: #1d2129; border-bottom-left-radius: 4px; }
+  .msg-sys { align-self: center; color: #86909c; font-size: 12px; }
+  .msg-label { display: block; font-size: 11px; opacity: .7; margin-bottom: 3px; font-weight: 600; }
+
+  /* 右：侧栏 */
+  .sidebar { width: 340px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+  .panel { background: #fff; border: 1px solid #e5e6eb; border-radius: 12px; padding: 16px; }
+  .panel-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+  .panel-title:hover { color: #165dff; }
+  .fold-arrow { margin-left: auto; font-size: 12px; color: #86909c; }
+  .panel-body { max-height: 300px; overflow-y: auto; }
+  .panel-body.collapsed { display: none; }
+  .panel-empty { color: #c9cdd4; font-size: 12px; text-align: center; padding: 16px 0; }
+
+  /* 进步趋势 */
+  .progress-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .progress-stat { background: #f7f8fa; border-radius: 8px; padding: 8px 10px; }
+  .progress-stat .num { font-size: 18px; font-weight: 700; color: #165dff; line-height: 1.2; }
+  .progress-stat .lbl { font-size: 11px; color: #86909c; }
+  #trendChart { width: 100%; max-width: 300px; display: block; margin: 0 auto 12px; }
+  .cefr-history { font-size: 11px; color: #4e5969; }
+  .cefr-history .h-title { font-size: 12px; color: #86909c; margin-bottom: 6px; }
+
+  .assess-progress { margin-bottom: 12px; }
+  .progress-bar { height: 8px; background: #f2f3f5; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; width: 0%; background: #165dff; border-radius: 4px; transition: width .9s linear; }
+  .progress-text { font-size: 11px; color: #86909c; margin-top: 4px; }
+
+  .overall-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .overall-score { font-size: 40px; font-weight: 700; color: #165dff; line-height: 1; }
+  .overall-meta { font-size: 12px; color: #86909c; }
+  .score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
+  .score-row .name { width: 42px; color: #4e5969; flex-shrink: 0; }
+  .bar { flex: 1; height: 8px; background: #f2f3f5; border-radius: 4px; overflow: hidden; }
+  .bar .fill { height: 100%; background: #165dff; border-radius: 4px; transition: width .4s; }
+  .bar .fill.low { background: #f53f3f; }
+  .bar .fill.mid { background: #ff7d00; }
+  .bar .fill.high { background: #00b42a; }
+  .score-row .val { width: 20px; text-align: right; color: #1d2129; font-weight: 600; }
+  .assessment-comment { margin-top: 10px; font-size: 13px; color: #4e5969; background: #f7f8fa; border-radius: 8px; padding: 10px; }
+  .assessment-history { margin-top: 12px; border-top: 1px solid #e5e6eb; padding-top: 10px; }
+  .assessment-history .h-title { font-size: 12px; color: #86909c; margin-bottom: 6px; }
+  .history-item { font-size: 11px; color: #4e5969; padding: 4px 0; display: flex; gap: 8px; align-items: baseline; }
+  .history-item .htime { color: #c9cdd4; flex-shrink: 0; }
+
+  .correction-item { border: 1px solid #e5e6eb; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+  .correction-orig { color: #f53f3f; text-decoration: line-through; font-size: 13px; word-break: break-word; }
+  .correction-fix { color: #00b42a; font-size: 14px; font-weight: 600; word-break: break-word; margin-top: 4px; }
+  .correction-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .tag { font-size: 10px; padding: 1px 8px; border-radius: 10px; background: #f2f3f5; color: #4e5969; }
+  .tag.grammar { background: #fff7e8; color: #d46b08; }
+  .tag.vocabulary { background: #e8f3ff; color: #165dff; }
+  .tag.pronunciation { background: #f2e8ff; color: #722ed1; }
+  .ctime { font-size: 10px; color: #c9cdd4; }
+
+  .vocab-item { border: 1px solid #e5e6eb; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+  .vocab-word { font-size: 15px; font-weight: 700; color: #1d2129; }
+  .vocab-meaning { font-size: 13px; color: #4e5969; margin-top: 2px; }
+  .vocab-example { font-size: 12px; color: #86909c; font-style: italic; margin-top: 4px; }
+
+  .hint { margin-top: 12px; font-size: 12px; color: #86909c; }
+  .hint code { background: #f2f3f5; padding: 1px 6px; border-radius: 4px; font-family: Menlo, Consolas, monospace; }
+
+  @media (max-width: 1180px) {
+    .main { flex-direction: column; }
+    .prep-panel, .sidebar { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>私人英语教练 · Coach Alex</h1>
+  <div class="subtitle">浏览器端实时语音 · 自动回声消除 · 课前准备 + 实时评估 + 错题集</div>
+
+  <div class="toolbar">
+    <button id="endBtn" class="btn-danger" disabled>结束</button>
+    <button id="chatToggleBtn" class="btn-ghost">隐藏聊天框</button>
+  </div>
+
+  <div class="status-bar">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">就绪</span>
+  </div>
+
+  <div class="main">
+    <div class="prep-panel">
+      <div class="panel-title">🎯 课前准备</div>
+
+      <div class="prep-section">
+        <label>这次想练什么？（文字描述）</label>
+        <textarea id="requirementInput" placeholder="例：这次练轮胎报价谈判，重点练价格表达和客户砍价应对"></textarea>
+        <button id="summarizeBtn">✨ AI 整理训练要点</button>
+        <div class="summary-box" id="summaryBox"></div>
+      </div>
+
+      <div class="prep-section">
+        <label>临时挂文件（本轮聚焦 + 自动存知识库）</label>
+        <input type="file" id="fileInput" multiple accept=".md,.txt,.markdown,.csv,.xlsx,.pdf" style="font-size:12px;" />
+        <div class="file-list" id="fileList"></div>
+      </div>
+
+      <button id="confirmBtn" class="btn-primary">✅ 确认开始训练</button>
+    </div>
+
+    <div class="chat-panel" id="chatPanel">
+      <div class="chat" id="chat">
+        <div class="chat-empty" id="chatEmpty">先在左侧填好训练要求（可挂文件），点「确认开始训练」后即可用英语练习</div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="panel">
+        <div class="panel-title" data-target="body-assessment">📊 实时评估 <span class="fold-arrow">▾</span></div>
+        <div class="panel-body" id="body-assessment">
+          <div class="assess-progress">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="progress-text" id="progressText">开始训练后，每 30 秒自动评估一次</div>
+          </div>
+          <div id="assessmentBox"><div class="panel-empty">暂无评估</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title" data-target="body-correction">📝 错题集 <span class="fold-arrow">▾</span></div>
+        <div class="panel-body" id="body-correction">
+          <div id="correctionBox"><div class="panel-empty">教练纠正的错误会显示在这里（原句 → 正确示范）</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title" data-target="body-vocab">📚 新词 <span class="fold-arrow">▾</span></div>
+        <div class="panel-body" id="body-vocab">
+          <div id="vocabBox"><div class="panel-empty">对话中值得学的新词会显示在这里</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title" data-target="body-progress">📈 进步趋势 <span class="fold-arrow">▸</span></div>
+        <div class="panel-body collapsed" id="body-progress">
+          <div id="progressStats" class="progress-stats"></div>
+          <canvas id="trendChart" width="300" height="200"></canvas>
+          <div id="cefrHistory" class="cefr-history"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint">
+    用英语说话即可，教练会当场温和纠错。外放也没问题——浏览器已自动消除回声。
+    评估、错题、新词都会自动保存到本地 <code>训练历史/</code>。
+  </div>
+</div>
+
+<script>
+const chat = document.getElementById('chat');
+const chatEmpty = document.getElementById('chatEmpty');
+const endBtn = document.getElementById('endBtn');
+const chatToggleBtn = document.getElementById('chatToggleBtn');
+const chatPanel = document.getElementById('chatPanel');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const assessmentBox = document.getElementById('assessmentBox');
+const correctionBox = document.getElementById('correctionBox');
+const vocabBox = document.getElementById('vocabBox');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const requirementInput = document.getElementById('requirementInput');
+const summarizeBtn = document.getElementById('summarizeBtn');
+const summaryBox = document.getElementById('summaryBox');
+const fileInput = document.getElementById('fileInput');
+const fileList = document.getElementById('fileList');
+const confirmBtn = document.getElementById('confirmBtn');
+
+let pc = null;
+let config = null;
+let serverDc = null;
+let remoteAudio = null;
+let localStream = null;
+
+let assessments = [];
+let corrections = [];
+let vocabulary = [];
+let dialogueLog = [];
+
+const ASSESS_INTERVAL = 30;
+let assessTimer = null;
+let assessCountdown = ASSESS_INTERVAL;
+let assessing = false;
+let sessionStarted = false;
+let sessionStartTime = '';
+
+let uploadedFiles = [];      // {filename, content}
+let pendingTrainingContext = '';
+
+const ERROR_TYPE_CN = { grammar: '语法', vocabulary: '词汇', pronunciation: '发音' };
+
+function nowTime() { return new Date().toLocaleTimeString('zh-CN', { hour12: false }); }
+
+// 面板折叠：点击标题折叠/展开
+document.querySelectorAll('.panel-title[data-target]').forEach(t => {
+  t.onclick = () => {
+    const body = document.getElementById(t.dataset.target);
+    body.classList.toggle('collapsed');
+    const arrow = t.querySelector('.fold-arrow');
+    if (arrow) arrow.textContent = body.classList.contains('collapsed') ? '▸' : '▾';
+  };
+});
+
+// 心跳：浏览器开着就持续发，关掉浏览器后服务空闲超时自动退出
+setInterval(() => { fetch('/ping').catch(() => {}); }, 20000);
+function setStatus(text, state) {
+  statusText.textContent = text;
+  statusDot.className = 'status-dot' + (state ? ' ' + state : '');
+}
+function appendMessage(who, text) {
+  if (chatEmpty) chatEmpty.remove();
+  const div = document.createElement('div');
+  div.className = 'msg ' + (who === '你' ? 'msg-user' : who === '教练' ? 'msg-coach' : 'msg-sys');
+  if (who === '你' || who === '教练') {
+    const label = document.createElement('span');
+    label.className = 'msg-label';
+    label.textContent = who;
+    div.appendChild(label);
+  }
+  div.appendChild(document.createTextNode(text));
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+function appendSys(text) { appendMessage('', text); }
+function logToServer(record) {
+  fetch('/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record) }).catch(() => {});
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function scoreClass(s) { if (s >= 7) return 'high'; if (s >= 5) return 'mid'; return 'low'; }
+function scoreBar(name, score) {
+  const s = Math.max(0, Math.min(10, score));
+  return '<div class="score-row">'
+    + '<span class="name">' + name + '</span>'
+    + '<div class="bar"><div class="fill ' + scoreClass(s) + '" style="width:' + (s * 10) + '%"></div></div>'
+    + '<span class="val">' + s + '</span></div>';
+}
+
+function renderAssessment() {
+  if (assessments.length === 0) { assessmentBox.innerHTML = '<div class="panel-empty">暂无评估</div>'; return; }
+  const a = assessments[0];
+  const cefr = a.cefr_level || '?';
+  const g = Number(a.grammar_score) || 0, f = Number(a.fluency_score) || 0, v = Number(a.vocabulary_score) || 0;
+  let html = '<div class="overall-row"><div class="overall-score">' + escapeHtml(cefr) + '</div>'
+    + '<div class="overall-meta">CEFR 水平<br>更新时间 ' + a.ts + '</div></div>';
+  html += scoreBar('语法', g) + scoreBar('流利度', f) + scoreBar('词汇', v);
+  if (a.comment) html += '<div class="assessment-comment">' + escapeHtml(a.comment) + '</div>';
+  if (assessments.length > 1) {
+    html += '<div class="assessment-history"><div class="h-title">历史评估</div>';
+    for (const h of assessments.slice(1, 8)) {
+      html += '<div class="history-item"><span class="htime">' + h.ts + '</span><span>'
+        + escapeHtml(h.cefr_level || '?') + '（语法 ' + (Number(h.grammar_score)||0) + ' / 流利 ' + (Number(h.fluency_score)||0) + ' / 词汇 ' + (Number(h.vocabulary_score)||0) + '）</span></div>';
+    }
+    html += '</div>';
+  }
+  assessmentBox.innerHTML = html;
+}
+
+function renderCorrections() {
+  if (corrections.length === 0) { correctionBox.innerHTML = '<div class="panel-empty">教练纠正的错误会显示在这里（原句 → 正确示范）</div>'; return; }
+  let html = '';
+  for (const c of corrections) {
+    html += '<div class="correction-item">'
+      + '<div class="correction-orig">✗ ' + escapeHtml(c.original || '') + '</div>'
+      + '<div class="correction-fix">✓ ' + escapeHtml(c.corrected || '') + '</div>'
+      + '<div class="correction-meta"><span class="tag ' + (c.error_type || 'grammar') + '">' + (ERROR_TYPE_CN[c.error_type] || '纠错') + '</span><span class="ctime">' + c.ts + '</span></div>'
+      + '</div>';
+  }
+  correctionBox.innerHTML = html;
+}
+
+function renderVocabulary() {
+  if (vocabulary.length === 0) { vocabBox.innerHTML = '<div class="panel-empty">对话中值得学的新词会显示在这里</div>'; return; }
+  let html = '';
+  for (const w of vocabulary) {
+    html += '<div class="vocab-item"><div class="vocab-word">' + escapeHtml(w.word || '') + '</div>';
+    if (w.meaning) html += '<div class="vocab-meaning">' + escapeHtml(w.meaning) + '</div>';
+    if (w.example) html += '<div class="vocab-example">' + escapeHtml(w.example) + '</div>';
+    html += '</div>';
+  }
+  vocabBox.innerHTML = html;
+}
+
+// ---- 进步趋势 ----
+async function loadProgress() {
+  try {
+    const resp = await fetch('/progress');
+    if (!resp.ok) return;
+    const data = await resp.json();
+    renderProgressStats(data);
+    drawTrendChart(data.assessments || []);
+    renderCefrHistory(data.assessments || []);
+  } catch (e) { console.error(e); }
+}
+
+function renderProgressStats(data) {
+  const box = document.getElementById('progressStats');
+  if (!box) return;
+  box.innerHTML =
+    '<div class="progress-stat"><div class="num">' + (data.assessments || []).length + '</div><div class="lbl">评估次数</div></div>'
+    + '<div class="progress-stat"><div class="num">' + (data.total_turns || 0) + '</div><div class="lbl">发言句数</div></div>'
+    + '<div class="progress-stat"><div class="num">' + (data.corrections_count || 0) + '</div><div class="lbl">累计纠错</div></div>'
+    + '<div class="progress-stat"><div class="num">' + (data.vocabulary_count || 0) + '</div><div class="lbl">累计新词</div></div>';
+}
+
+function drawTrendChart(assessments) {
+  const canvas = document.getElementById('trendChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const n = assessments.length;
+  if (n < 1) {
+    ctx.fillStyle = '#c9cdd4';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('暂无评估数据，练几次后这里会出现趋势图', W / 2, H / 2);
+    return;
+  }
+
+  const padL = 28, padR = 8, padT = 10, padB = 22;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  // 网格 + y 轴标签
+  ctx.strokeStyle = '#eee';
+  ctx.fillStyle = '#86909c';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  for (let s = 0; s <= 10; s += 2) {
+    const y = padT + plotH * (1 - s / 10);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillText(String(s), padL - 4, y + 3);
+  }
+
+  const series = [
+    { key: 'grammar_score', color: '#f53f3f', label: '语法' },
+    { key: 'fluency_score', color: '#165dff', label: '流利' },
+    { key: 'vocabulary_score', color: '#00b42a', label: '词汇' },
+  ];
+  const px = i => n === 1 ? padL + plotW / 2 : padL + plotW * (i / (n - 1));
+  const py = v => padT + plotH * (1 - Math.max(0, Math.min(10, Number(v) || 0)) / 10);
+
+  series.forEach(s => {
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    assessments.forEach((a, i) => {
+      const x = px(i), y = py(a[s.key]);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    assessments.forEach((a, i) => {
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.arc(px(i), py(a[s.key]), 2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  });
+
+  // 图例
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'left';
+  let lx = padL;
+  series.forEach(s => {
+    ctx.fillStyle = s.color;
+    ctx.fillRect(lx, H - 14, 8, 8);
+    ctx.fillStyle = '#4e5969';
+    ctx.fillText(s.label, lx + 11, H - 6);
+    lx += 42;
+  });
+}
+
+function renderCefrHistory(assessments) {
+  const box = document.getElementById('cefrHistory');
+  if (!box) return;
+  if (!assessments.length) { box.innerHTML = ''; return; }
+  let html = '<div class="h-title">CEFR 等级变化</div>';
+  const recent = assessments.slice(-6);
+  for (const a of recent) {
+    const t = (a.ts || '').slice(11, 16);
+    html += '<div class="history-item"><span class="htime">' + t + '</span><span>' + escapeHtml(a.cefr_level || '?') + '</span></div>';
+  }
+  box.innerHTML = html;
+}
+
+function renderProgress() {
+  if (assessing) { progressFill.style.width = '100%'; progressFill.style.background = '#ff7d00'; progressText.textContent = '评估中…'; }
+  else if (!sessionStarted) { progressFill.style.width = '0%'; progressFill.style.background = '#165dff'; progressText.textContent = '开始训练后，每 30 秒自动评估一次'; }
+  else { const pct = ((ASSESS_INTERVAL - assessCountdown) / ASSESS_INTERVAL) * 100; progressFill.style.width = pct + '%'; progressFill.style.background = '#165dff'; progressText.textContent = '距离下一次评估 ' + assessCountdown + ' 秒'; }
+}
+
+function logDialogue(role, text) {
+  dialogueLog.push({ role, text, ts: Date.now() });
+  const cutoff = Date.now() - 120000;
+  dialogueLog = dialogueLog.filter(d => d.ts >= cutoff);
+}
+
+async function triggerAssess() {
+  if (assessing) return;
+  const cutoff = Date.now() - ASSESS_INTERVAL * 1000;
+  const recent = dialogueLog.filter(d => d.ts >= cutoff);
+  if (!recent.some(d => d.role === 'user')) { renderProgress(); return; }
+  assessing = true;
+  renderProgress();
+  const dialog = recent.map(d => (d.role === 'user' ? '[学生] ' : '[教练] ') + d.text).join('\n');
+  try {
+    const resp = await fetch('/assess', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dialog }) });
+    if (!resp.ok) throw new Error('评估失败 ' + resp.status);
+    applyAssessment(await resp.json());
+  } catch (err) { console.error(err); appendSys('⚠ 评估失败：' + err.message); }
+  finally { assessing = false; renderProgress(); }
+}
+
+function applyAssessment(result) {
+  const ts = nowTime();
+  assessments.unshift({
+    cefr_level: result.cefr_level,
+    grammar_score: result.grammar_score,
+    fluency_score: result.fluency_score,
+    vocabulary_score: result.vocabulary_score,
+    comment: result.comment, ts,
+  });
+  logToServer({ role: 'assessment', ...result });
+  renderAssessment();
+  for (const c of (result.corrections || [])) { corrections.unshift({ ...c, ts }); logToServer({ role: 'correction', ...c }); }
+  renderCorrections();
+  for (const w of (result.vocabulary || [])) { vocabulary.unshift({ ...w, ts }); logToServer({ role: 'vocabulary', ...w }); }
+  renderVocabulary();
+  loadProgress();
+}
+
+function startAssessLoop() {
+  if (assessTimer) return;
+  sessionStarted = true;
+  assessCountdown = ASSESS_INTERVAL;
+  renderProgress();
+  assessTimer = setInterval(() => {
+    if (assessing) return;
+    assessCountdown--;
+    if (assessCountdown <= 0) { triggerAssess(); assessCountdown = ASSESS_INTERVAL; }
+    renderProgress();
+  }, 1000);
+}
+
+// ---- 课前准备 ----
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(',')[1] || '');
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+function renderFileList() {
+  if (uploadedFiles.length === 0) { fileList.innerHTML = ''; return; }
+  let html = '';
+  uploadedFiles.forEach((f, i) => {
+    html += '<div class="file-item"><span>📎 ' + escapeHtml(f.filename) + '</span><span class="rm" data-i="' + i + '">✕</span></div>';
+  });
+  fileList.innerHTML = html;
+  fileList.querySelectorAll('.rm').forEach(el => {
+    el.onclick = () => { uploadedFiles.splice(Number(el.dataset.i), 1); renderFileList(); };
+  });
+}
+
+fileInput.onchange = async () => {
+  for (const file of fileInput.files) {
+    try {
+      const dataB64 = await fileToBase64(file);
+      const resp = await fetch('/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, data_b64: dataB64 }),
+      });
+      if (resp.ok) {
+        const r = await resp.json();
+        uploadedFiles.push(r);
+        renderFileList();
+        appendSys('已挂文件：' + r.filename + '（已存知识库）');
+      } else {
+        appendSys('⚠ 上传失败：' + file.name);
+      }
+    } catch (e) { appendSys('⚠ 上传失败：' + e.message); }
+  }
+  fileInput.value = '';
+};
+
+summarizeBtn.onclick = async () => {
+  const requirement = requirementInput.value.trim();
+  const files = uploadedFiles.map(f => '===== ' + f.filename + ' =====\n' + f.content).join('\n\n');
+  if (!requirement && !files) { appendSys('请先写训练要求或挂文件'); return; }
+  summaryBox.textContent = '整理中…';
+  try {
+    const resp = await fetch('/summarize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requirement, files }) });
+    if (resp.ok) { const r = await resp.json(); summaryBox.textContent = r.summary || '（无）'; }
+    else summaryBox.textContent = '整理失败';
+  } catch (e) { summaryBox.textContent = '整理失败：' + e.message; }
+};
+
+confirmBtn.onclick = () => {
+  if (pc) return;
+  const requirement = requirementInput.value.trim();
+  const files = uploadedFiles.map(f => '===== ' + f.filename + ' =====\n' + f.content).join('\n\n');
+  const summary = summaryBox.textContent.trim();
+  let ctx = '';
+  if (requirement) ctx += '学生本次要求：\n' + requirement + '\n\n';
+  if (files) ctx += '本次聚焦的相关文件内容：\n' + files + '\n\n';
+  if (summary && summary !== '整理中…' && summary !== '整理失败') ctx += '训练要点（AI 整理）：\n' + summary;
+  pendingTrainingContext = ctx.slice(0, 15000);
+  if (!requirement && uploadedFiles.length === 0) {
+    appendSys('未填要求也未挂文件，将进行自由对话训练');
+  }
+  startSession().catch(err => {
+    console.error(err);
+    setStatus('启动失败：' + err.message, 'error');
+    appendSys('启动失败：' + err.message);
+    cleanup();
+  });
+};
+
+// ---- WebRTC ----
+function handleEvent(data, channel) {
+  let obj;
+  try { obj = JSON.parse(data); } catch { return; }
+  switch (obj.type) {
+    case 'session.created': {
+      let instructions = config.instructions;
+      if (pendingTrainingContext) instructions += '\n\n# 本次训练聚焦\n' + pendingTrainingContext;
+      const update = {
+        type: 'session.update',
+        session: {
+          modalities: ['text', 'audio'],
+          instructions: instructions,
+          voice: config.voice,
+          turn_detection: { type: 'server_vad', threshold: 0.5, silence_duration_ms: 800 },
+        },
+      };
+      if (channel && channel.readyState === 'open') channel.send(JSON.stringify(update));
+      setStatus('已连接，请说英语', 'connected');
+      appendSys('会话已建立，Coach Alex 上线。开始用英语聊吧～');
+      break;
+    }
+    case 'conversation.item.input_audio_transcription.completed': {
+      const t = (obj.transcript || '').trim();
+      if (t) { appendMessage('你', t); logToServer({ role: 'user', text: t }); logDialogue('user', t); }
+      break;
+    }
+    case 'response.audio_transcript.done': {
+      const t = (obj.transcript || '').trim();
+      if (t) { appendMessage('教练', t); logToServer({ role: 'coach', text: t }); logDialogue('coach', t); }
+      break;
+    }
+    case 'input_audio_buffer.speech_started': break;
+    case 'error': appendSys('错误：' + JSON.stringify(obj.error || obj)); break;
+  }
+}
+
+function waitIceComplete() {
+  return new Promise((resolve) => {
+    if (!pc || pc.iceGatheringState === 'complete') return resolve();
+    pc.onicegatheringstatechange = () => { if (pc.iceGatheringState === 'complete') resolve(); };
+    setTimeout(resolve, 3000);
+  });
+}
+
+async function startSession() {
+  if (pc) return;
+  confirmBtn.disabled = true;
+  setStatus('加载配置…', 'connecting');
+  try {
+    config = await fetch('/config').then(r => r.json());
+    if (config.knowledge_truncated) appendSys('⚠ 知识库过长已截断，部分内容未注入');
+    setStatus('请求麦克风权限…', 'connecting');
+
+    pc = new RTCPeerConnection({ iceServers: [] });
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    localStream.getAudioTracks().forEach(t => pc.addTrack(t, localStream));
+    pc.createDataChannel('oai-events');
+    pc.ondatachannel = (e) => { const ch = e.channel; ch.onmessage = (ev) => handleEvent(ev.data, ch); };
+    pc.ontrack = (e) => {
+      if (!remoteAudio) {
+        remoteAudio = document.createElement('audio');
+        remoteAudio.autoplay = true; remoteAudio.playsInline = true; remoteAudio.style.display = 'none';
+        document.body.appendChild(remoteAudio);
+      }
+      const stream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
+      remoteAudio.srcObject = stream;
+      remoteAudio.play().catch(err => { console.error('播放失败:', err); appendSys('⚠ 播放失败：' + err.message); });
+    };
+    pc.onconnectionstatechange = () => {
+      if (!pc) return;
+      if (pc.connectionState === 'connected') setStatus('已连接，请说英语', 'connected');
+      else if (['failed', 'closed', 'disconnected'].includes(pc.connectionState)) { setStatus('连接已断开', 'error'); cleanup(); }
+    };
+
+    setStatus('建立 WebRTC 连接…', 'connecting');
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await waitIceComplete();
+    const resp = await fetch('/signal', { method: 'POST', headers: { 'Content-Type': 'application/sdp' }, body: pc.localDescription.sdp });
+    if (!resp.ok) { let m = '信令失败 ' + resp.status; try { m = (await resp.json()).error || m; } catch {} throw new Error(m); }
+    const answerSdp = await resp.text();
+    await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
+
+    endBtn.disabled = false;
+    sessionStartTime = nowTime();
+    startAssessLoop();
+  } catch (err) {
+    console.error(err);
+    setStatus('启动失败：' + err.message, 'error');
+    appendSys('启动失败：' + err.message);
+    cleanup();
+  }
+}
+
+function cleanup() {
+  if (assessTimer) { clearInterval(assessTimer); assessTimer = null; }
+  if (remoteAudio) { remoteAudio.pause(); remoteAudio.srcObject = null; remoteAudio = null; }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  if (pc) { try { pc.close(); } catch {} pc = null; }
+  confirmBtn.disabled = false;
+  endBtn.disabled = true;
+  if (!statusText.textContent.startsWith('启动失败') && !statusText.textContent.startsWith('连接已断开')) setStatus('已结束', '');
+}
+
+chatToggleBtn.onclick = () => {
+  const hidden = chatPanel.style.display === 'none';
+  chatPanel.style.display = hidden ? '' : 'none';
+  chatToggleBtn.textContent = hidden ? '隐藏聊天框' : '显示聊天框';
+};
+
+endBtn.onclick = async () => {
+  if (sessionStarted) {
+    appendSys('正在生成训练报告…');
+    try {
+      const resp = await fetch('/report', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start_time: sessionStartTime, end_time: nowTime(), dialogue: dialogueLog, assessments, corrections, vocabulary }),
+      });
+      if (resp.ok) { const r = await resp.json(); appendSys('✅ 报告已保存：' + r.path); }
+      else appendSys('⚠ 报告生成失败');
+    } catch (err) { console.error(err); appendSys('⚠ 报告生成失败：' + err.message); }
+  }
+  cleanup();
+  setStatus('已结束', '');
+  appendSys('会话已结束');
+  loadProgress();
+};
+
+// 页面加载时先拉一次进步趋势
+loadProgress();
+</script>
+</body>
+</html>
