@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>私人英语教练 · Coach Alex</title>
+<title>英语口语教练 · 三模式</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -14,6 +14,20 @@
   .container { max-width: 1460px; margin: 0 auto; }
   h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
   .subtitle { font-size: 13px; color: #86909c; margin-bottom: 16px; }
+
+  /* ---- 模式选择页 ---- */
+  .mode-picker { max-width: 900px; margin: 8vh auto 0; text-align: center; }
+  .mode-picker h1 { font-size: 28px; margin-bottom: 8px; }
+  .mode-picker .subtitle { font-size: 14px; margin-bottom: 36px; }
+  .mode-cards { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+  .mode-card {
+    width: 260px; background: #fff; border: 1px solid #e5e6eb; border-radius: 16px;
+    padding: 32px 24px; cursor: pointer; transition: all .18s; text-align: center;
+  }
+  .mode-card:hover { border-color: #165dff; box-shadow: 0 6px 20px rgba(22,93,255,.12); transform: translateY(-2px); }
+  .mode-icon { font-size: 42px; margin-bottom: 14px; }
+  .mode-name { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .mode-desc { font-size: 12.5px; color: #86909c; line-height: 1.6; }
 
   .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
   button {
@@ -38,20 +52,40 @@
 
   .main { display: flex; gap: 16px; align-items: flex-start; }
 
-  /* 左：课前准备 */
-  .prep-panel { width: 280px; flex-shrink: 0; background: #fff; border: 1px solid #e5e6eb; border-radius: 12px; padding: 16px; }
+  /* 左：模式面板 */
+  .prep-panel { width: 300px; flex-shrink: 0; background: #fff; border: 1px solid #e5e6eb; border-radius: 12px; padding: 16px; }
   .prep-panel .panel-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
   .prep-section { margin-bottom: 16px; }
   .prep-section label { display: block; font-size: 12px; color: #4e5969; margin-bottom: 6px; font-weight: 500; }
   .prep-section textarea { width: 100%; font-family: inherit; font-size: 13px; padding: 10px; border: 1px solid #e5e6eb;
-    border-radius: 8px; resize: vertical; min-height: 90px; }
+    border-radius: 8px; resize: vertical; min-height: 64px; }
   .prep-section textarea:focus { outline: none; border-color: #165dff; }
   .prep-section input[type="text"], .prep-section input[type="password"] {
     width: 100%; font-family: inherit; font-size: 13px; padding: 8px 10px;
     border: 1px solid #e5e6eb; border-radius: 8px; margin-bottom: 6px;
   }
   .prep-section input:focus { outline: none; border-color: #165dff; }
-  .prep-section button { width: 100%; margin-top: 8px; }
+
+  /* 出题卡 */
+  .cue-card { background: #f7f8fa; border: 1px solid #e5e6eb; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+  .cue-topic { font-size: 14px; font-weight: 600; color: #1d2129; margin-bottom: 8px; }
+  .cue-bullet { font-size: 12.5px; color: #4e5969; padding: 2px 0; padding-left: 14px; position: relative; }
+  .cue-bullet::before { content: "•"; position: absolute; left: 2px; color: #165dff; }
+  .cue-part3 { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #e5e6eb; }
+  .cue-part3 .p3-title { font-size: 11px; color: #86909c; font-weight: 600; margin-bottom: 4px; }
+  .cue-part3 .cue-bullet { font-size: 11.5px; color: #86909c; }
+
+  /* 计时器 */
+  .timer-box { display: none; text-align: center; padding: 10px; background: #f7f8fa; border-radius: 10px; margin-bottom: 12px; }
+  .timer-box.show { display: block; }
+  .timer-label { font-size: 11px; color: #86909c; margin-bottom: 2px; }
+  .timer-num { font-size: 28px; font-weight: 700; color: #165dff; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .timer-num.warn { color: #ff7d00; }
+  .timer-num.danger { color: #f53f3f; }
+
+  .phase-hint { font-size: 12px; color: #86909c; background: #f2f3f5; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; }
+
+  /* 聊天模式：课前准备 */
   .summary-box { margin-top: 8px; font-size: 12px; color: #4e5969; background: #f7f8fa; border-radius: 8px; padding: 10px;
     white-space: pre-wrap; word-break: break-word; min-height: 20px; }
   .summary-box:empty { display: none; }
@@ -59,9 +93,8 @@
   .file-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #4e5969; padding: 4px 8px;
     background: #f7f8fa; border-radius: 6px; margin-bottom: 4px; word-break: break-all; }
   .file-item .rm { margin-left: auto; color: #f53f3f; cursor: pointer; flex-shrink: 0; font-weight: 700; }
-  #confirmBtn { width: 100%; padding: 12px; font-size: 14px; }
 
-  /* 中：聊天框（可折叠） */
+  /* 中：聊天框 */
   .chat-panel { flex: 1; min-width: 0; }
   .chat { background: #fff; border: 1px solid #e5e6eb; border-radius: 12px; padding: 16px;
     min-height: 320px; max-height: 72vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
@@ -97,16 +130,16 @@
   .progress-text { font-size: 11px; color: #86909c; margin-top: 4px; }
 
   .overall-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-  .overall-score { font-size: 40px; font-weight: 700; color: #165dff; line-height: 1; }
+  .overall-band { font-size: 40px; font-weight: 700; color: #165dff; line-height: 1; }
   .overall-meta { font-size: 12px; color: #86909c; }
   .score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
-  .score-row .name { width: 42px; color: #4e5969; flex-shrink: 0; }
+  .score-row .name { width: 64px; color: #4e5969; flex-shrink: 0; }
   .bar { flex: 1; height: 8px; background: #f2f3f5; border-radius: 4px; overflow: hidden; }
   .bar .fill { height: 100%; background: #165dff; border-radius: 4px; transition: width .4s; }
   .bar .fill.low { background: #f53f3f; }
   .bar .fill.mid { background: #ff7d00; }
   .bar .fill.high { background: #00b42a; }
-  .score-row .val { width: 20px; text-align: right; color: #1d2129; font-weight: 600; }
+  .score-row .val { width: 26px; text-align: right; color: #1d2129; font-weight: 600; }
   .assessment-comment { margin-top: 10px; font-size: 13px; color: #4e5969; background: #f7f8fa; border-radius: 8px; padding: 10px; }
   .assessment-history { margin-top: 12px; border-top: 1px solid #e5e6eb; padding-top: 10px; }
   .assessment-history .h-title { font-size: 12px; color: #86909c; margin-bottom: 6px; }
@@ -118,15 +151,25 @@
   .correction-fix { color: #00b42a; font-size: 14px; font-weight: 600; word-break: break-word; margin-top: 4px; }
   .correction-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
   .tag { font-size: 10px; padding: 1px 8px; border-radius: 10px; background: #f2f3f5; color: #4e5969; }
+  .tag.fluency_coherence { background: #e8f3ff; color: #165dff; }
+  .tag.lexical_resource { background: #f2e8ff; color: #722ed1; }
+  .tag.grammatical_range_accuracy { background: #fff7e8; color: #d46b08; }
+  .tag.pronunciation { background: #e8fff1; color: #00b42a; }
   .tag.grammar { background: #fff7e8; color: #d46b08; }
   .tag.vocabulary { background: #e8f3ff; color: #165dff; }
-  .tag.pronunciation { background: #f2e8ff; color: #722ed1; }
   .ctime { font-size: 10px; color: #c9cdd4; }
 
   .vocab-item { border: 1px solid #e5e6eb; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
   .vocab-word { font-size: 15px; font-weight: 700; color: #1d2129; }
   .vocab-meaning { font-size: 13px; color: #4e5969; margin-top: 2px; }
   .vocab-example { font-size: 12px; color: #86909c; font-style: italic; margin-top: 4px; }
+
+  /* 演讲模式：梳理结果 */
+  .polish-block { border: 1px solid #e5e6eb; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+  .polish-block .pb-title { font-size: 12px; font-weight: 600; color: #4e5969; margin-bottom: 8px; }
+  .polish-speech { font-size: 14px; color: #1d2129; white-space: pre-wrap; word-break: break-word; line-height: 1.7; }
+  .polish-raw { font-size: 12.5px; color: #86909c; white-space: pre-wrap; word-break: break-word; line-height: 1.6; }
+  .polish-tips { font-size: 13px; color: #4e5969; white-space: pre-wrap; word-break: break-word; line-height: 1.7; }
 
   .hint { margin-top: 12px; font-size: 12px; color: #86909c; }
   .hint code { background: #f2f3f5; padding: 1px 6px; border-radius: 4px; font-family: Menlo, Consolas, monospace; }
@@ -138,169 +181,97 @@
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>私人英语教练 · Coach Alex</h1>
-  <div class="subtitle">浏览器端实时语音 · 自动回声消除 · 课前准备 + 实时评估 + 错题集</div>
 
-  <div class="toolbar">
-    <button id="endBtn" class="btn-danger" disabled>结束</button>
-    <button id="chatToggleBtn" class="btn-ghost">隐藏聊天框</button>
-  </div>
-
-  <div class="status-bar">
-    <span class="status-dot" id="statusDot"></span>
-    <span id="statusText">就绪</span>
-  </div>
-
-  <div class="main">
-    <div class="prep-panel">
-      <div class="panel-title">🎯 课前准备</div>
-
-      <div class="prep-section">
-        <label>这次想练什么？（文字描述）</label>
-        <textarea id="requirementInput" placeholder="例：这次练轮胎报价谈判，重点练价格表达和客户砍价应对"></textarea>
-        <button id="summarizeBtn">✨ AI 整理训练要点</button>
-        <div class="summary-box" id="summaryBox"></div>
-      </div>
-
-      <div class="prep-section">
-        <label>临时挂文件（本轮聚焦 + 自动存知识库）</label>
-        <input type="file" id="fileInput" multiple accept=".md,.txt,.markdown,.csv,.xlsx,.pdf" style="font-size:12px;" />
-        <div class="file-list" id="fileList"></div>
-      </div>
-
-      <button id="settingsBtn" class="btn-ghost" style="width:100%;margin-bottom:8px;">⚙️ 设置（API Key / 个人信息）</button>
-      <div class="prep-section" id="settingsPanel" style="display:none;">
-        <label>API Key（百炼 Token Plan，存 macOS Keychain）</label>
-        <input type="password" id="apiKeyInput" placeholder="sk-sp-..." />
-        <button id="saveKeyBtn">💾 保存 Key</button>
-
-        <label style="margin-top:10px;">个人信息（教练据此个性化教学）</label>
-        <input type="text" id="profileLevel" placeholder="英语水平，如 CET-4（四级）" />
-        <input type="text" id="profileGoal" placeholder="学习目标，如 商务口语" />
-        <input type="text" id="profileProfession" placeholder="职业，如 轮胎销售/市场（米其林）" />
-        <input type="text" id="profileHobbies" placeholder="爱好，如 爬山、炒股" />
-        <button id="saveProfileBtn">💾 保存个人信息</button>
-      </div>
-
-      <button id="confirmBtn" class="btn-primary">✅ 确认开始训练</button>
+<!-- ============ 模式选择页 ============ -->
+<div id="modePicker" class="mode-picker">
+  <h1>英语口语教练</h1>
+  <div class="subtitle">选一种模式开始练习，本次会话固定该模式</div>
+  <div class="mode-cards">
+    <div class="mode-card" data-mode="ielts">
+      <div class="mode-icon">🎓</div>
+      <div class="mode-name">雅思口语教练</div>
+      <div class="mode-desc">Part 2 话题独白 + Part 3 深入讨论<br>考官追问与反馈 · 雅思四维 0-9 评分</div>
     </div>
-
-    <div class="chat-panel" id="chatPanel">
-      <div class="chat" id="chat">
-        <div class="chat-empty" id="chatEmpty">先在左侧填好训练要求（可挂文件），点「确认开始训练」后即可用英语练习</div>
-      </div>
+    <div class="mode-card" data-mode="chat">
+      <div class="mode-icon">💬</div>
+      <div class="mode-name">随意聊天</div>
+      <div class="mode-desc">和米其林同事 Michael 自由英语闲聊<br>即时温和纠错 · 实时评估</div>
     </div>
-
-    <div class="sidebar">
-      <div class="panel">
-        <div class="panel-title" data-target="body-assessment">📊 实时评估 <span class="fold-arrow">▾</span></div>
-        <div class="panel-body" id="body-assessment">
-          <div class="assess-progress">
-            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-            <div class="progress-text" id="progressText">开始训练后，每 30 秒自动评估一次</div>
-          </div>
-          <div id="assessmentBox"><div class="panel-empty">暂无评估</div></div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-title" data-target="body-correction">📝 错题集 <span class="fold-arrow">▾</span></div>
-        <div class="panel-body" id="body-correction">
-          <div id="correctionBox"><div class="panel-empty">教练纠正的错误会显示在这里（原句 → 正确示范）</div></div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-title" data-target="body-vocab">📚 新词 <span class="fold-arrow">▾</span></div>
-        <div class="panel-body" id="body-vocab">
-          <div id="vocabBox"><div class="panel-empty">对话中值得学的新词会显示在这里</div></div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-title" data-target="body-progress">📈 进步趋势 <span class="fold-arrow">▸</span></div>
-        <div class="panel-body collapsed" id="body-progress">
-          <div id="progressStats" class="progress-stats"></div>
-          <canvas id="trendChart" width="300" height="200"></canvas>
-          <div id="cefrHistory" class="cefr-history"></div>
-        </div>
-      </div>
+    <div class="mode-card" data-mode="speech">
+      <div class="mode-icon">🎤</div>
+      <div class="mode-name">演讲教练</div>
+      <div class="mode-desc">自由脱稿演讲不停说<br>点停止后梳理重构成更好的演讲稿</div>
     </div>
   </div>
+</div>
 
-  <div class="hint">
-    用英语说话即可，教练会当场温和纠错。外放也没问题——浏览器已自动消除回声。
-    评估、错题、新词都会自动保存到本地 <code>训练历史/</code>。
+<!-- ============ 主应用 ============ -->
+<div id="app" style="display:none;">
+  <div class="container">
+    <h1 id="appTitle"></h1>
+    <div class="subtitle" id="appSubtitle"></div>
+
+    <div class="toolbar">
+      <button id="switchModeBtn" class="btn-ghost">← 切换模式</button>
+      <button id="endBtn" class="btn-danger" disabled>结束</button>
+      <button id="chatToggleBtn" class="btn-ghost">隐藏聊天框</button>
+    </div>
+
+    <div class="status-bar">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">就绪</span>
+    </div>
+
+    <div class="main">
+      <div class="prep-panel" id="prepPanel"></div>
+
+      <div class="chat-panel" id="chatPanel">
+        <div class="chat" id="chat">
+          <div class="chat-empty" id="chatEmpty"></div>
+        </div>
+      </div>
+
+      <div class="sidebar" id="sidebar"></div>
+    </div>
+
+    <div class="hint" id="appHint"></div>
   </div>
 </div>
 
 <script>
+// ============ 共享 DOM 引用 ============
 const chat = document.getElementById('chat');
 const chatEmpty = document.getElementById('chatEmpty');
+const chatPanel = document.getElementById('chatPanel');
 const endBtn = document.getElementById('endBtn');
 const chatToggleBtn = document.getElementById('chatToggleBtn');
-const chatPanel = document.getElementById('chatPanel');
+const switchModeBtn = document.getElementById('switchModeBtn');
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
-const assessmentBox = document.getElementById('assessmentBox');
-const correctionBox = document.getElementById('correctionBox');
-const vocabBox = document.getElementById('vocabBox');
-const progressFill = document.getElementById('progressFill');
-const progressText = document.getElementById('progressText');
-const requirementInput = document.getElementById('requirementInput');
-const summarizeBtn = document.getElementById('summarizeBtn');
-const summaryBox = document.getElementById('summaryBox');
-const fileInput = document.getElementById('fileInput');
-const fileList = document.getElementById('fileList');
-const confirmBtn = document.getElementById('confirmBtn');
-const settingsBtn = document.getElementById('settingsBtn');
-const settingsPanel = document.getElementById('settingsPanel');
-const apiKeyInput = document.getElementById('apiKeyInput');
-const saveKeyBtn = document.getElementById('saveKeyBtn');
-const saveProfileBtn = document.getElementById('saveProfileBtn');
-const profileLevel = document.getElementById('profileLevel');
-const profileGoal = document.getElementById('profileGoal');
-const profileProfession = document.getElementById('profileProfession');
-const profileHobbies = document.getElementById('profileHobbies');
+const prepPanel = document.getElementById('prepPanel');
+const sidebar = document.getElementById('sidebar');
+const appTitle = document.getElementById('appTitle');
+const appSubtitle = document.getElementById('appSubtitle');
+const appHint = document.getElementById('appHint');
+const modePicker = document.getElementById('modePicker');
+const app = document.getElementById('app');
 
+let currentMode = null;      // ielts | chat | speech
 let pc = null;
 let config = null;
 let serverDc = null;
 let remoteAudio = null;
 let localStream = null;
 
+// 三模式共享的训练数据（一次只激活一种模式）
 let assessments = [];
 let corrections = [];
 let vocabulary = [];
 let dialogueLog = [];
-
-const ASSESS_INTERVAL = 30;
-let assessTimer = null;
-let assessCountdown = ASSESS_INTERVAL;
-let assessing = false;
-let sessionStarted = false;
 let sessionStartTime = '';
 
-let uploadedFiles = [];      // {filename, content}
-let pendingTrainingContext = '';
-
-const ERROR_TYPE_CN = { grammar: '语法', vocabulary: '词汇', pronunciation: '发音' };
-
+// ============ 基础工具 ============
 function nowTime() { return new Date().toLocaleTimeString('zh-CN', { hour12: false }); }
-
-// 面板折叠：点击标题折叠/展开
-document.querySelectorAll('.panel-title[data-target]').forEach(t => {
-  t.onclick = () => {
-    const body = document.getElementById(t.dataset.target);
-    body.classList.toggle('collapsed');
-    const arrow = t.querySelector('.fold-arrow');
-    if (arrow) arrow.textContent = body.classList.contains('collapsed') ? '▸' : '▾';
-  };
-});
-
-// 心跳：浏览器开着就持续发，关掉浏览器后服务空闲超时自动退出
-setInterval(() => { fetch('/ping').catch(() => {}); }, 20000);
 function setStatus(text, state) {
   statusText.textContent = text;
   statusDot.className = 'status-dot' + (state ? ' ' + state : '');
@@ -308,11 +279,12 @@ function setStatus(text, state) {
 function appendMessage(who, text) {
   if (chatEmpty) chatEmpty.remove();
   const div = document.createElement('div');
-  div.className = 'msg ' + (who === '你' ? 'msg-user' : who === '教练' ? 'msg-coach' : 'msg-sys');
-  if (who === '你' || who === '教练') {
+  const coachLabel = (currentMode === 'ielts') ? '考官' : (currentMode === 'chat' ? 'Michael' : '教练');
+  div.className = 'msg ' + (who === '你' ? 'msg-user' : (who === 'coach' ? 'msg-coach' : 'msg-sys'));
+  if (who === '你' || who === 'coach') {
     const label = document.createElement('span');
     label.className = 'msg-label';
-    label.textContent = who;
+    label.textContent = who === '你' ? '你' : coachLabel;
     div.appendChild(label);
   }
   div.appendChild(document.createTextNode(text));
@@ -326,24 +298,782 @@ function logToServer(record) {
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+function bindPanelFold() {
+  document.querySelectorAll('.panel-title[data-target]').forEach(t => {
+    t.onclick = () => {
+      const body = document.getElementById(t.dataset.target);
+      body.classList.toggle('collapsed');
+      const arrow = t.querySelector('.fold-arrow');
+      if (arrow) arrow.textContent = body.classList.contains('collapsed') ? '▸' : '▾';
+    };
+  });
+}
 
-function scoreClass(s) { if (s >= 7) return 'high'; if (s >= 5) return 'mid'; return 'low'; }
+// ============ 心跳 ============
+setInterval(() => { fetch('/ping').catch(() => {}); }, 20000);
+
+// ============ 三个模式的元信息 ============
+const MODE_META = {
+  ielts: {
+    title: '雅思口语教练 · IELTS Speaking',
+    subtitle: 'Part 2 话题独白 + Part 3 深入讨论 · 考官追问与反馈 · 雅思四维 0-9 评分',
+    hint: '流程：抽题 → 准备 1 分钟 → Part 2 独白 → Part 3 追问 → 考官反馈 + 四维评分。独白计时只显示不打断。话题库在 <code>话题库.md</code>，可随时批量增改。',
+  },
+  chat: {
+    title: '随意聊天 · Michael',
+    subtitle: '和米其林同事 Michael 自由英语闲聊 · 即时温和纠错 · 实时评估',
+    hint: '用英语说话即可，Michael 会当场温和纠错。先填训练要求（可选）或直接点「确认开始训练」自由聊。评估、错题、新词都会自动保存到本地 <code>训练历史/</code>。',
+  },
+  speech: {
+    title: '演讲教练 · Public Speaking',
+    subtitle: '自由脱稿演讲不停说 · 点停止后梳理重构成更好的演讲稿',
+    hint: '点「开始演讲」后不停地说英语，教练保持安静只倾听；点「停止演讲」后，右侧会给出优化后的演讲稿 + 演讲技巧点评。',
+  },
+};
+
+// 设置面板 HTML（三个模式共用）
+const SETTINGS_HTML = `
+  <button id="settingsBtn" class="btn-ghost" style="width:100%;margin-bottom:8px;">⚙️ 设置（API Key / 个人信息）</button>
+  <div class="prep-section" id="settingsPanel" style="display:none;">
+    <label>API Key（百炼 Token Plan，存 macOS Keychain）</label>
+    <input type="password" id="apiKeyInput" placeholder="sk-sp-..." />
+    <button id="saveKeyBtn">💾 保存 Key</button>
+    <label style="margin-top:10px;">个人信息（据此个性化提问）</label>
+    <input type="text" id="profileLevel" placeholder="英语水平，如 CET-4（四级）" />
+    <input type="text" id="profileGoal" placeholder="目标，如 雅思 6.5" />
+    <input type="text" id="profileProfession" placeholder="职业，如 轮胎销售/市场（米其林）" />
+    <input type="text" id="profileHobbies" placeholder="爱好，如 爬山、炒股" />
+    <button id="saveProfileBtn">💾 保存个人信息</button>
+  </div>`;
+
+// ============ 左栏 HTML ============
+function ieltsLeftHTML() {
+  return `
+    <div class="panel-title">🎯 雅思口语</div>
+    <div class="prep-section" id="topicSection">
+      <button id="drawTopicBtn" class="btn-primary" style="width:100%;">🎲 随机抽题</button>
+      <label style="margin-top:12px;">或自己写一个话题（Part 2）</label>
+      <textarea id="customTopicInput" placeholder="例：Describe a time you dealt with a difficult customer"></textarea>
+      <button id="useCustomBtn" style="width:100%;">✍️ 用这个话题</button>
+    </div>
+    <div id="cueCard" style="display:none;"></div>
+    <div class="timer-box" id="timerBox">
+      <div class="timer-label" id="timerLabel">准备时间</div>
+      <div class="timer-num" id="timerNum">01:00</div>
+    </div>
+    <div class="phase-hint" id="phaseHint" style="display:none;"></div>
+    <div class="prep-section" id="controlSection" style="display:none;">
+      <button id="prepBtn" class="btn-primary" style="width:100%;">⏱ 开始准备（1分钟）</button>
+      <button id="speakBtn" class="btn-primary" style="width:100%;margin-top:8px;" disabled>🎤 开始作答</button>
+      <button id="endSpeakBtn" class="btn-danger" style="width:100%;margin-top:8px;" disabled>⏹ 结束作答（进入 Part 3）</button>
+      <button id="endPart3Btn" class="btn-danger" style="width:100%;margin-top:8px;" disabled>💬 结束 Part 3（获取反馈）</button>
+    </div>
+    ${SETTINGS_HTML}`;
+}
+
+function chatLeftHTML() {
+  return `
+    <div class="panel-title">🎯 课前准备</div>
+    <div class="prep-section">
+      <label>这次想练什么？（文字描述，可选）</label>
+      <textarea id="requirementInput" placeholder="例：这次练轮胎报价谈判，重点练价格表达和客户砍价应对"></textarea>
+      <button id="summarizeBtn" style="width:100%;margin-top:8px;">✨ AI 整理训练要点</button>
+      <div class="summary-box" id="summaryBox"></div>
+    </div>
+    <div class="prep-section">
+      <label>临时挂文件（本轮聚焦 + 自动存知识库）</label>
+      <input type="file" id="fileInput" multiple accept=".md,.txt,.markdown,.csv,.xlsx,.pdf" style="font-size:12px;" />
+      <div class="file-list" id="fileList"></div>
+    </div>
+    <button id="confirmBtn" class="btn-primary" style="width:100%;">✅ 确认开始训练</button>
+    ${SETTINGS_HTML}`;
+}
+
+function speechLeftHTML() {
+  return `
+    <div class="panel-title">🎤 演讲训练</div>
+    <div class="prep-section">
+      <label>演讲主题（可选，梳理时给上下文）</label>
+      <textarea id="speechTopicInput" placeholder="例：介绍我们公司的新轮胎产品 / 我的职业规划"></textarea>
+    </div>
+    <div class="timer-box" id="speechTimerBox">
+      <div class="timer-label" id="speechTimerLabel">演讲时长</div>
+      <div class="timer-num" id="speechTimerNum">00:00</div>
+    </div>
+    <div class="phase-hint" id="speechPhaseHint" style="display:none;"></div>
+    <div class="prep-section">
+      <button id="startSpeechBtn" class="btn-primary" style="width:100%;">🎤 开始演讲</button>
+      <button id="stopSpeechBtn" class="btn-danger" style="width:100%;margin-top:8px;" disabled>⏹ 停止演讲</button>
+      <button id="restartSpeechBtn" style="width:100%;margin-top:8px;" disabled>🔄 再来一轮</button>
+    </div>
+    ${SETTINGS_HTML}`;
+}
+
+// ============ 右栏 HTML ============
+function ieltsRightHTML() {
+  return `
+    <div class="panel">
+      <div class="panel-title" data-target="body-assessment">📊 雅思评分（四维 0-9）<span class="fold-arrow">▾</span></div>
+      <div class="panel-body" id="body-assessment">
+        <div id="assessmentBox"><div class="panel-empty">结束一个阶段后，这里显示四维评分</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title" data-target="body-correction">📝 错题集（按维度）<span class="fold-arrow">▾</span></div>
+      <div class="panel-body" id="body-correction">
+        <div id="correctionBox"><div class="panel-empty">考官纠出的错误会按雅思维度显示在这里</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title" data-target="body-vocab">📚 高分表达 <span class="fold-arrow">▾</span></div>
+      <div class="panel-body" id="body-vocab">
+        <div id="vocabBox"><div class="panel-empty">值得学的高分词句会显示在这里</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title" data-target="body-progress">📈 进步趋势 <span class="fold-arrow">▸</span></div>
+      <div class="panel-body collapsed" id="body-progress">
+        <div id="progressStats" class="progress-stats"></div>
+        <canvas id="trendChart" width="300" height="200"></canvas>
+      </div>
+    </div>`;
+}
+
+function chatRightHTML() {
+  return `
+    <div class="panel">
+      <div class="panel-title" data-target="body-assessment">📊 实时评估 <span class="fold-arrow">▾</span></div>
+      <div class="panel-body" id="body-assessment">
+        <div class="assess-progress">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-text" id="progressText">开始训练后，每 30 秒自动评估一次</div>
+        </div>
+        <div id="assessmentBox"><div class="panel-empty">暂无评估</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title" data-target="body-correction">📝 错题集 <span class="fold-arrow">▾</span></div>
+      <div class="panel-body" id="body-correction">
+        <div id="correctionBox"><div class="panel-empty">教练纠正的错误会显示在这里（原句 → 正确示范）</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title" data-target="body-vocab">📚 新词 <span class="fold-arrow">▾</span></div>
+      <div class="panel-body" id="body-vocab">
+        <div id="vocabBox"><div class="panel-empty">对话中值得学的新词会显示在这里</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title" data-target="body-progress">📈 进步趋势 <span class="fold-arrow">▸</span></div>
+      <div class="panel-body collapsed" id="body-progress">
+        <div id="progressStats" class="progress-stats"></div>
+        <canvas id="trendChart" width="300" height="200"></canvas>
+        <div id="cefrHistory" class="cefr-history"></div>
+      </div>
+    </div>`;
+}
+
+function speechRightHTML() {
+  return `
+    <div class="panel">
+      <div class="panel-title" data-target="body-polish">✨ 演讲梳理结果 <span class="fold-arrow">▾</span></div>
+      <div class="panel-body" id="body-polish" style="max-height:none;">
+        <div id="polishBox"><div class="panel-empty">停止演讲后，这里显示「原始口述 vs 优化稿」和演讲技巧点评</div></div>
+      </div>
+    </div>`;
+}
+
+// ============ 模式切换 ============
+function selectMode(mode) {
+  currentMode = mode;
+  // 重置共享状态
+  resetSharedState();
+  // 标题/副标题/提示
+  const meta = MODE_META[mode];
+  appTitle.textContent = meta.title;
+  appSubtitle.textContent = meta.subtitle;
+  appHint.innerHTML = meta.hint;
+  // 左栏右栏
+  prepPanel.innerHTML = mode === 'ielts' ? ieltsLeftHTML() : mode === 'chat' ? chatLeftHTML() : speechLeftHTML();
+  sidebar.innerHTML = mode === 'ielts' ? ieltsRightHTML() : mode === 'chat' ? chatRightHTML() : speechRightHTML();
+  bindPanelFold();
+  // 切换界面
+  modePicker.style.display = 'none';
+  app.style.display = '';
+  setStatus('就绪', '');
+  // 绑定模式事件
+  bindSettings();
+  if (mode === 'ielts') bindIeltsEvents();
+  else if (mode === 'chat') bindChatEvents();
+  else bindSpeechEvents();
+}
+
+function resetSharedState() {
+  assessments = [];
+  corrections = [];
+  vocabulary = [];
+  dialogueLog = [];
+  sessionStartTime = '';
+  cleanup();
+}
+
+function goBackToPicker() {
+  cleanup();
+  currentMode = null;
+  app.style.display = 'none';
+  modePicker.style.display = '';
+}
+
+switchModeBtn.onclick = goBackToPicker;
+
+// ============ 设置（三模式共用） ============
+function bindSettings() {
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  const saveKeyBtn = document.getElementById('saveKeyBtn');
+  const saveProfileBtn = document.getElementById('saveProfileBtn');
+  const profileLevel = document.getElementById('profileLevel');
+  const profileGoal = document.getElementById('profileGoal');
+  const profileProfession = document.getElementById('profileProfession');
+  const profileHobbies = document.getElementById('profileHobbies');
+  if (!settingsBtn) return;
+
+  settingsBtn.onclick = () => {
+    settingsPanel.style.display = settingsPanel.style.display === 'none' ? '' : 'none';
+  };
+  saveKeyBtn.onclick = async () => {
+    const key = apiKeyInput.value.trim();
+    if (!key) { appendSys('请输入 API Key'); return; }
+    try {
+      const resp = await fetch('/save-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) });
+      if (resp.ok) { appendSys('✅ Key 已保存到 Keychain'); apiKeyInput.value = ''; }
+      else { const e = await resp.json().catch(() => ({})); appendSys('⚠️ 保存 Key 失败：' + (e.error || '')); }
+    } catch (err) { appendSys('⚠️ 保存 Key 失败：' + err.message); }
+  };
+  saveProfileBtn.onclick = async () => {
+    const profile = { english_level: profileLevel.value, goal: profileGoal.value, profession: profileProfession.value, hobbies: profileHobbies.value };
+    try {
+      const resp = await fetch('/save-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });
+      if (resp.ok) appendSys('✅ 个人信息已保存（下次对话生效）');
+      else appendSys('⚠️ 保存个人信息失败');
+    } catch (err) { appendSys('⚠️ 保存个人信息失败：' + err.message); }
+  };
+}
+function fillSettings(hasKey, profile) {
+  profile = profile || {};
+  const settingsPanel = document.getElementById('settingsPanel');
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  const profileLevel = document.getElementById('profileLevel');
+  const profileGoal = document.getElementById('profileGoal');
+  const profileProfession = document.getElementById('profileProfession');
+  const profileHobbies = document.getElementById('profileHobbies');
+  if (!settingsPanel) return;
+  if (!hasKey) { settingsPanel.style.display = ''; appendSys('⚠️ 未检测到 API Key，请在设置里输入你的百炼 key'); }
+  apiKeyInput.placeholder = hasKey ? '已配置（留空则不改）' : '输入你的百炼 Token Plan key（sk-sp-...）';
+  profileLevel.value = profile.english_level || '';
+  profileGoal.value = profile.goal || '';
+  profileProfession.value = profile.profession || '';
+  profileHobbies.value = profile.hobbies || '';
+}
+
+// ============ WebRTC 公共部分 ============
+function shouldMuteCoach() {
+  if (currentMode === 'speech') return true;            // 演讲模式教练全程静音（梳理靠文字）
+  if (currentMode === 'ielts') return phase === 'part2'; // 雅思 Part 2 独白静音
+  return false;                                          // 聊天模式不静音
+}
+
+function waitIceComplete() {
+  return new Promise((resolve) => {
+    if (!pc || pc.iceGatheringState === 'complete') return resolve();
+    pc.onicegatheringstatechange = () => { if (pc.iceGatheringState === 'complete') resolve(); };
+    setTimeout(resolve, 3000);
+  });
+}
+
+async function startSession() {
+  if (pc) return;
+  setStatus('加载配置…', 'connecting');
+  try {
+    config = await fetch('/config?mode=' + currentMode).then(r => r.json());
+    fillSettings(config.has_key, config.profile);
+    setStatus('请求麦克风权限…', 'connecting');
+
+    pc = new RTCPeerConnection({ iceServers: [] });
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    localStream.getAudioTracks().forEach(t => pc.addTrack(t, localStream));
+    pc.createDataChannel('oai-events');
+    pc.ondatachannel = (e) => {
+      serverDc = e.channel;
+      serverDc.onmessage = (ev) => handleEvent(ev.data, serverDc);
+    };
+    pc.ontrack = (e) => {
+      if (!remoteAudio) {
+        remoteAudio = document.createElement('audio');
+        remoteAudio.autoplay = true; remoteAudio.playsInline = true; remoteAudio.style.display = 'none';
+        document.body.appendChild(remoteAudio);
+      }
+      const stream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
+      remoteAudio.srcObject = stream;
+      remoteAudio.muted = shouldMuteCoach();
+      remoteAudio.play().catch(err => { console.error('播放失败:', err); appendSys('⚠ 播放失败：' + err.message); });
+    };
+    pc.onconnectionstatechange = () => {
+      if (!pc) return;
+      if (pc.connectionState === 'connected') setStatus('已连接', 'connected');
+      else if (['failed', 'closed', 'disconnected'].includes(pc.connectionState)) { setStatus('连接已断开', 'error'); cleanup(); }
+    };
+
+    setStatus('建立 WebRTC 连接…', 'connecting');
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await waitIceComplete();
+    const resp = await fetch('/signal', { method: 'POST', headers: { 'Content-Type': 'application/sdp' }, body: pc.localDescription.sdp });
+    if (!resp.ok) { let m = '信令失败 ' + resp.status; try { m = (await resp.json()).error || m; } catch {} throw new Error(m); }
+    const answerSdp = await resp.text();
+    await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
+
+    sessionStartTime = nowTime();
+    endBtn.disabled = false;
+  } catch (err) {
+    console.error(err);
+    setStatus('启动失败：' + err.message, 'error');
+    appendSys('启动失败：' + err.message);
+    cleanup();
+  }
+}
+
+function cleanup() {
+  if (currentMode === 'ielts') {
+    stopSpeakTimer();
+    if (prepTimer) { clearInterval(prepTimer); prepTimer = null; }
+  }
+  if (currentMode === 'chat') {
+    if (assessTimer) { clearInterval(assessTimer); assessTimer = null; }
+    sessionStarted = false;
+  }
+  if (currentMode === 'speech') {
+    if (speechTimer) { clearInterval(speechTimer); speechTimer = null; }
+    isSpeaking = false;
+  }
+  if (remoteAudio) { remoteAudio.pause(); remoteAudio.srcObject = null; remoteAudio = null; }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  if (pc) { try { pc.close(); } catch {} pc = null; }
+  serverDc = null;
+  pendingAssess = [];
+  endBtn.disabled = true;
+  if (!statusText.textContent.startsWith('启动失败') && !statusText.textContent.startsWith('连接已断开')) setStatus('已结束', '');
+}
+
+// ============ handleEvent：按模式分发 ============
+function handleEvent(data, channel) {
+  let obj;
+  try { obj = JSON.parse(data); } catch { return; }
+  switch (obj.type) {
+    case 'session.created': {
+      let instructions = config.instructions;
+      if (currentMode === 'ielts') instructions += buildTopicContext();
+      if (currentMode === 'chat') {
+        if (pendingTrainingContext) instructions += '\n\n# 本次训练聚焦\n' + pendingTrainingContext;
+      }
+      if (currentMode === 'speech') {
+        const t = speechTopicInputValue();
+        if (t) instructions += '\n\n# 本次演讲主题\n' + t;
+      }
+      const update = {
+        type: 'session.update',
+        session: {
+          modalities: ['text', 'audio'],
+          instructions: instructions,
+          voice: config.voice,
+          turn_detection: { type: 'server_vad', threshold: 0.5, silence_duration_ms: 800 },
+          input_audio_transcription: { model: 'fun-asr', language: 'en' },
+        },
+      };
+      if (channel && channel.readyState === 'open') channel.send(JSON.stringify(update));
+      setStatus('已连接', 'connected');
+      if (currentMode === 'ielts') appendSys('考官已就位。现在是 Part 2，请开始你的独白～');
+      else if (currentMode === 'chat') appendSys('会话已建立，Michael 上线。开始用英语聊吧～');
+      else appendSys('演讲教练已就位（保持安静）。请开始你的演讲，不停地说～');
+      break;
+    }
+    case 'conversation.item.input_audio_transcription.completed': {
+      const t = (obj.transcript || '').trim();
+      if (t) {
+        appendMessage('你', t);
+        logToServer({ role: 'user', text: t });
+        logDialogue('user', t);
+        if (currentMode === 'speech' && isSpeaking) speechTranscript.push(t);
+      }
+      break;
+    }
+    case 'response.audio_transcript.done': {
+      if (currentMode === 'speech') break;  // 演讲模式教练静音，丢弃
+      if (currentMode === 'ielts' && phase === 'part2') break;  // Part 2 独白考官静音
+      const t = (obj.transcript || '').trim();
+      if (t) {
+        appendMessage('coach', t);
+        logToServer({ role: 'coach', text: t });
+        logDialogue('coach', t);
+        // 雅思：feedback 阶段考官口述 model answer 后自动同步报告 + 备忘录
+        if (currentMode === 'ielts' && phase === 'feedback' && !autoSynced && /model\s+answer/i.test(t)) {
+          finalizeSession();
+        }
+      }
+      break;
+    }
+    case 'input_audio_buffer.speech_started': break;
+    case 'error': appendSys('错误：' + JSON.stringify(obj.error || obj)); break;
+  }
+}
+
+// =========================================================
+// 模式一：雅思口语教练
+// =========================================================
+let phase = 'idle';
+let currentTopic = null;
+let prepTimer = null;
+let speakTimer = null;
+let speakSeconds = 0;
+let pendingAssess = [];
+let autoSynced = false;
+const PREP_SECONDS = 60;
+const CRITERION_CN = { fluency_coherence: '流利与连贯', lexical_resource: '词汇资源', grammatical_range_accuracy: '语法', pronunciation: '发音' };
+const CRITERION_SHORT = { fluency_coherence: 'FC', lexical_resource: 'LR', grammatical_range_accuracy: 'GRA', pronunciation: 'P' };
+
+function setPhase(p, hintText) {
+  phase = p;
+  if (hintText !== undefined) {
+    const phaseHint = document.getElementById('phaseHint');
+    phaseHint.style.display = '';
+    phaseHint.textContent = hintText;
+  }
+}
+
+async function drawTopic() {
+  try {
+    const resp = await fetch('/topic');
+    if (!resp.ok) throw new Error('出题失败 ' + resp.status);
+    const t = await resp.json();
+    if (!t.topic) { appendSys('⚠ 话题库为空，请先在 话题库.md 里加话题'); return; }
+    currentTopic = t;
+    renderCueCard();
+    setPhase('topic_ready');
+    document.getElementById('controlSection').style.display = '';
+    document.getElementById('prepBtn').disabled = false;
+    document.getElementById('speakBtn').disabled = true;
+    document.getElementById('endSpeakBtn').disabled = true;
+    document.getElementById('endPart3Btn').disabled = true;
+    document.getElementById('timerBox').classList.remove('show');
+    appendSys('已抽题（题库共 ' + (t.total || '?') + ' 个）：「' + t.topic + '」');
+    setPhase('topic_ready', '① 抽到话题，点「开始准备」进入 1 分钟准备');
+  } catch (e) { appendSys('⚠ ' + e.message); }
+}
+
+function useCustomTopic() {
+  const t = document.getElementById('customTopicInput').value.trim();
+  if (!t) { appendSys('请先输入话题'); return; }
+  currentTopic = { topic: t, bullets: [], part3: [] };
+  renderCueCard();
+  setPhase('topic_ready');
+  document.getElementById('controlSection').style.display = '';
+  document.getElementById('prepBtn').disabled = false;
+  document.getElementById('speakBtn').disabled = true;
+  document.getElementById('endSpeakBtn').disabled = true;
+  document.getElementById('endPart3Btn').disabled = true;
+  document.getElementById('timerBox').classList.remove('show');
+  appendSys('使用自定义话题：「' + t + '」');
+  setPhase('topic_ready', '① 已定话题，点「开始准备」进入 1 分钟准备');
+}
+
+function renderCueCard() {
+  const cueCard = document.getElementById('cueCard');
+  let html = '<div class="cue-card"><div class="cue-topic">' + escapeHtml(currentTopic.topic) + '</div>';
+  if (currentTopic.bullets && currentTopic.bullets.length) {
+    for (const b of currentTopic.bullets) html += '<div class="cue-bullet">' + escapeHtml(b) + '</div>';
+  }
+  if (currentTopic.part3 && currentTopic.part3.length) {
+    html += '<div class="cue-part3"><div class="p3-title">Part 3 追问（供参考）</div>';
+    for (const p of currentTopic.part3) html += '<div class="cue-bullet">' + escapeHtml(p) + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  cueCard.innerHTML = html;
+  cueCard.style.display = '';
+}
+
+function fmtTime(s) {
+  s = Math.max(0, s);
+  const m = Math.floor(s / 60), sec = s % 60;
+  return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+}
+
+function startPrep() {
+  if (phase !== 'topic_ready') return;
+  setPhase('preparing');
+  document.getElementById('prepBtn').disabled = true;
+  let remain = PREP_SECONDS;
+  const timerBox = document.getElementById('timerBox');
+  const timerLabel = document.getElementById('timerLabel');
+  const timerNum = document.getElementById('timerNum');
+  timerBox.classList.add('show');
+  timerLabel.textContent = '准备时间（1 分钟）';
+  timerNum.textContent = fmtTime(remain);
+  timerNum.className = 'timer-num';
+  setPhase('preparing', '② 准备中：用这 1 分钟想好怎么组织你的回答');
+  prepTimer = setInterval(() => {
+    remain--;
+    timerNum.textContent = fmtTime(remain);
+    if (remain <= 10) timerNum.className = 'timer-num danger';
+    if (remain <= 0) {
+      clearInterval(prepTimer);
+      prepTimer = null;
+      document.getElementById('speakBtn').disabled = false;
+      timerBox.classList.remove('show');
+      setPhase('topic_ready', '✅ 准备结束，点「开始作答」开始 Part 2 独白');
+    }
+  }, 1000);
+}
+
+function startSpeakTimer() {
+  speakSeconds = 0;
+  const timerBox = document.getElementById('timerBox');
+  const timerLabel = document.getElementById('timerLabel');
+  const timerNum = document.getElementById('timerNum');
+  timerBox.classList.add('show');
+  timerLabel.textContent = 'Part 2 独白（目标 1-2 分钟，只计时不打断）';
+  timerNum.textContent = fmtTime(0);
+  timerNum.className = 'timer-num';
+  speakTimer = setInterval(() => {
+    speakSeconds++;
+    timerNum.textContent = fmtTime(speakSeconds);
+    if (speakSeconds >= 60) timerNum.className = 'timer-num warn';
+    if (speakSeconds >= 120) timerNum.className = 'timer-num danger';
+  }, 1000);
+}
+
+function stopSpeakTimer() {
+  if (speakTimer) { clearInterval(speakTimer); speakTimer = null; }
+}
+
 function scoreBar(name, score) {
-  const s = Math.max(0, Math.min(10, score));
+  const s = Math.max(0, Math.min(9, Number(score) || 0));
   return '<div class="score-row">'
     + '<span class="name">' + name + '</span>'
-    + '<div class="bar"><div class="fill ' + scoreClass(s) + '" style="width:' + (s * 10) + '%"></div></div>'
+    + '<div class="bar"><div class="fill ' + (s >= 7 ? 'high' : s >= 5 ? 'mid' : 'low') + '" style="width:' + (s / 9 * 100) + '%"></div></div>'
     + '<span class="val">' + s + '</span></div>';
 }
 
 function renderAssessment() {
+  const assessmentBox = document.getElementById('assessmentBox');
+  if (!assessmentBox) return;
+  if (assessments.length === 0) { assessmentBox.innerHTML = '<div class="panel-empty">结束一个阶段后，这里显示四维评分</div>'; return; }
+  const a = assessments[0];
+  const band = a.overall_band ?? '?';
+  let html = '<div class="overall-row"><div class="overall-band">' + escapeHtml(band) + '</div>'
+    + '<div class="overall-meta">总 Band<br>更新时间 ' + a.ts + '</div></div>';
+  html += scoreBar('FC 流利与连贯', a.fluency_coherence);
+  html += scoreBar('LR 词汇资源', a.lexical_resource);
+  html += scoreBar('GRA 语法', a.grammatical_range_accuracy);
+  html += scoreBar('P 发音', a.pronunciation);
+  if (a.comment) html += '<div class="assessment-comment">' + escapeHtml(a.comment) + '</div>';
+  assessmentBox.innerHTML = html;
+}
+
+function renderCorrections() {
+  const correctionBox = document.getElementById('correctionBox');
+  if (!correctionBox) return;
+  if (corrections.length === 0) { correctionBox.innerHTML = '<div class="panel-empty">考官纠出的错误会按雅思维度显示在这里</div>'; return; }
+  let html = '';
+  for (const c of corrections) {
+    const criterion = c.criterion || 'grammatical_range_accuracy';
+    html += '<div class="correction-item">'
+      + '<div class="correction-orig">✗ ' + escapeHtml(c.original || '') + '</div>'
+      + '<div class="correction-fix">✓ ' + escapeHtml(c.corrected || '') + '</div>'
+      + '<div class="correction-meta"><span class="tag ' + escapeHtml(criterion) + '">' + (CRITERION_SHORT[criterion] || criterion) + ' ' + (CRITERION_CN[criterion] || '') + '</span><span class="ctime">' + c.ts + '</span></div>'
+      + '</div>';
+  }
+  correctionBox.innerHTML = html;
+}
+
+function renderVocabulary() {
+  const vocabBox = document.getElementById('vocabBox');
+  if (!vocabBox) return;
+  if (vocabulary.length === 0) { vocabBox.innerHTML = '<div class="panel-empty">值得学的高分词句会显示在这里</div>'; return; }
+  let html = '';
+  for (const w of vocabulary) {
+    html += '<div class="vocab-item"><div class="vocab-word">' + escapeHtml(w.word || '') + '</div>';
+    if (w.meaning) html += '<div class="vocab-meaning">' + escapeHtml(w.meaning) + '</div>';
+    if (w.example) html += '<div class="vocab-example">' + escapeHtml(w.example) + '</div>';
+    html += '</div>';
+  }
+  vocabBox.innerHTML = html;
+}
+
+function logDialogue(role, text) {
+  dialogueLog.push({ role, text, ts: Date.now() });
+}
+
+function triggerAssess() {
+  const recent = dialogueLog.filter(d => d.ts >= Date.now() - 300000);
+  if (!recent.some(d => d.role === 'user')) return null;
+  const dialog = recent.map(d => (d.role === 'user' ? '[Student] ' : '[Examiner] ') + d.text).join('\n');
+  appendSys('评分中…');
+  const task = (async () => {
+    try {
+      const resp = await fetch('/assess', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dialog, mode: 'ielts' }) });
+      if (!resp.ok) throw new Error('评分失败 ' + resp.status);
+      applyAssessment(await resp.json());
+    } catch (err) { console.error(err); appendSys('⚠ 评分失败：' + err.message); }
+  })();
+  pendingAssess.push(task);
+  return task;
+}
+
+function applyAssessment(result) {
+  const ts = nowTime();
+  assessments.unshift({
+    fluency_coherence: result.fluency_coherence,
+    lexical_resource: result.lexical_resource,
+    grammatical_range_accuracy: result.grammatical_range_accuracy,
+    pronunciation: result.pronunciation,
+    overall_band: result.overall_band,
+    comment: result.comment, ts,
+  });
+  logToServer({ role: 'assessment', ...result });
+  renderAssessment();
+  for (const c of (result.corrections || [])) { corrections.unshift({ ...c, ts }); logToServer({ role: 'correction', ...c }); }
+  renderCorrections();
+  for (const w of (result.vocabulary || [])) { vocabulary.unshift({ ...w, ts }); logToServer({ role: 'vocabulary', ...w }); }
+  renderVocabulary();
+  loadProgress();
+}
+
+function buildTopicContext() {
+  let ctx = '';
+  if (currentTopic && currentTopic.topic) {
+    ctx += '# 本次雅思口语话题（Part 2 cue card）\n题目：' + currentTopic.topic + '\n';
+    if (currentTopic.bullets && currentTopic.bullets.length) {
+      ctx += '提示点：\n' + currentTopic.bullets.map(b => '- ' + b).join('\n') + '\n';
+    }
+    if (currentTopic.part3 && currentTopic.part3.length) {
+      ctx += 'Part 3 追问方向：\n' + currentTopic.part3.map(p => '- ' + p).join('\n') + '\n';
+    }
+  }
+  return ctx;
+}
+
+function sendPhaseUpdate(phaseName) {
+  if (!serverDc || serverDc.readyState !== 'open') return;
+  const phaseInstructions = {
+    part2: '\n\n# CURRENT PHASE: PART 2\nYou are now in Part 2. The student is giving their 1-2 minute long turn. Stay completely silent — do NOT interrupt, respond, or react until the student clearly finishes.',
+    part3: '\n\n# CURRENT PHASE: PART 3\nPart 2 is over. Now move to Part 3: ask 3-4 follow-up questions related to the topic, pushing for reasons, opinions, comparisons and examples.',
+    feedback: '\n\n# CURRENT PHASE: FEEDBACK\nPart 3 is over. Now give structured spoken feedback: (1) how to organize and develop the answer, (2) a model answer, (3) 2-3 concrete areas to improve.\n\nPacing rule (critical): speak in SHORT sentences (one clause each), pause 1-2 seconds after EVERY sentence, so each sentence is transcribed and shown to the student one at a time. Never say a long paragraph in one breath.',
+  };
+  const msg = phaseInstructions[phaseName];
+  if (!msg) return;
+  const base = ((config && config.instructions) || '') + buildTopicContext();
+  const update = {
+    type: 'session.update',
+    session: {
+      instructions: base + msg,
+      input_audio_transcription: { model: 'fun-asr', language: 'en' },
+    },
+  };
+  try { serverDc.send(JSON.stringify(update)); } catch (e) { console.error(e); }
+}
+
+async function finalizeSession() {
+  if (autoSynced) return;
+  autoSynced = true;
+  if (pendingAssess.length) {
+    appendSys('评分尚未完成，正在等待…');
+    await Promise.all(pendingAssess);
+  }
+  if (sessionStartTime) {
+    appendSys('正在生成雅思训练报告…');
+    try {
+      const resp = await fetch('/report', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start_time: sessionStartTime, end_time: nowTime(), topic: currentTopic, dialogue: dialogueLog, assessments, corrections, vocabulary }),
+      });
+      if (resp.ok) { const r = await resp.json(); appendSys('✅ 报告已保存：' + r.path); }
+      else appendSys('⚠ 报告生成失败');
+    } catch (err) { console.error(err); appendSys('⚠ 报告生成失败：' + err.message); }
+  }
+}
+
+function bindIeltsEvents() {
+  document.getElementById('drawTopicBtn').onclick = drawTopic;
+  document.getElementById('useCustomBtn').onclick = useCustomTopic;
+  document.getElementById('prepBtn').onclick = startPrep;
+  document.getElementById('speakBtn').onclick = async () => {
+    if (phase === 'topic_ready' || phase === 'preparing') {
+      if (prepTimer) { clearInterval(prepTimer); prepTimer = null; }
+      setPhase('part2');
+      document.getElementById('speakBtn').disabled = true;
+      await startSession();
+      sendPhaseUpdate('part2');
+      startSpeakTimer();
+      document.getElementById('endSpeakBtn').disabled = false;
+      setPhase('part2', '③ Part 2 独白进行中：连续说 1-2 分钟，考官保持安静');
+    }
+  };
+  document.getElementById('endSpeakBtn').onclick = () => {
+    if (phase !== 'part2') return;
+    stopSpeakTimer();
+    document.getElementById('timerBox').classList.remove('show');
+    document.getElementById('endSpeakBtn').disabled = true;
+    setPhase('part3');
+    if (remoteAudio) remoteAudio.muted = false;
+    sendPhaseUpdate('part3');
+    document.getElementById('endPart3Btn').disabled = false;
+    triggerAssess();
+    appendSys('Part 2 结束。进入 Part 3，考官将就话题追问，请用英语回答。');
+    setPhase('part3', '④ Part 3 进行中：考官追问，你回答，双向讨论');
+  };
+  document.getElementById('endPart3Btn').onclick = () => {
+    if (phase !== 'part3') return;
+    document.getElementById('endPart3Btn').disabled = true;
+    setPhase('feedback');
+    sendPhaseUpdate('feedback');
+    triggerAssess();
+    appendSys('Part 3 结束。考官将给出反馈 + 参考答案，评分显示在右侧。');
+    setPhase('feedback', '⑤ 反馈中：听考官点评怎么组织答案 + 参考答案');
+  };
+}
+
+// =========================================================
+// 模式二：随意聊天（Michael）
+// =========================================================
+const ASSESS_INTERVAL = 30;
+const ERROR_TYPE_CN = { grammar: '语法', vocabulary: '词汇', pronunciation: '发音' };
+let assessTimer = null;
+let assessCountdown = ASSESS_INTERVAL;
+let assessing = false;
+let sessionStarted = false;
+let uploadedFiles = [];
+let pendingTrainingContext = '';
+
+function chatScoreBar(name, score) {
+  const s = Math.max(0, Math.min(10, score));
+  return '<div class="score-row">'
+    + '<span class="name">' + name + '</span>'
+    + '<div class="bar"><div class="fill ' + (s >= 7 ? 'high' : s >= 5 ? 'mid' : 'low') + '" style="width:' + (s * 10) + '%"></div></div>'
+    + '<span class="val">' + s + '</span></div>';
+}
+
+function renderChatAssessment() {
+  const assessmentBox = document.getElementById('assessmentBox');
+  if (!assessmentBox) return;
   if (assessments.length === 0) { assessmentBox.innerHTML = '<div class="panel-empty">暂无评估</div>'; return; }
   const a = assessments[0];
   const cefr = a.cefr_level || '?';
   const g = Number(a.grammar_score) || 0, f = Number(a.fluency_score) || 0, v = Number(a.vocabulary_score) || 0;
-  let html = '<div class="overall-row"><div class="overall-score">' + escapeHtml(cefr) + '</div>'
+  let html = '<div class="overall-row"><div class="overall-band">' + escapeHtml(cefr) + '</div>'
     + '<div class="overall-meta">CEFR 水平<br>更新时间 ' + a.ts + '</div></div>';
-  html += scoreBar('语法', g) + scoreBar('流利度', f) + scoreBar('词汇', v);
+  html += chatScoreBar('语法', g) + chatScoreBar('流利度', f) + chatScoreBar('词汇', v);
   if (a.comment) html += '<div class="assessment-comment">' + escapeHtml(a.comment) + '</div>';
   if (assessments.length > 1) {
     html += '<div class="assessment-history"><div class="h-title">历史评估</div>';
@@ -356,7 +1086,9 @@ function renderAssessment() {
   assessmentBox.innerHTML = html;
 }
 
-function renderCorrections() {
+function renderChatCorrections() {
+  const correctionBox = document.getElementById('correctionBox');
+  if (!correctionBox) return;
   if (corrections.length === 0) { correctionBox.innerHTML = '<div class="panel-empty">教练纠正的错误会显示在这里（原句 → 正确示范）</div>'; return; }
   let html = '';
   for (const c of corrections) {
@@ -369,19 +1101,274 @@ function renderCorrections() {
   correctionBox.innerHTML = html;
 }
 
-function renderVocabulary() {
-  if (vocabulary.length === 0) { vocabBox.innerHTML = '<div class="panel-empty">对话中值得学的新词会显示在这里</div>'; return; }
-  let html = '';
-  for (const w of vocabulary) {
-    html += '<div class="vocab-item"><div class="vocab-word">' + escapeHtml(w.word || '') + '</div>';
-    if (w.meaning) html += '<div class="vocab-meaning">' + escapeHtml(w.meaning) + '</div>';
-    if (w.example) html += '<div class="vocab-example">' + escapeHtml(w.example) + '</div>';
-    html += '</div>';
-  }
-  vocabBox.innerHTML = html;
+function renderProgress() {
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  if (!progressFill || !progressText) return;
+  if (assessing) { progressFill.style.width = '100%'; progressFill.style.background = '#ff7d00'; progressText.textContent = '评估中…'; }
+  else if (!sessionStarted) { progressFill.style.width = '0%'; progressFill.style.background = '#165dff'; progressText.textContent = '开始训练后，每 30 秒自动评估一次'; }
+  else { const pct = ((ASSESS_INTERVAL - assessCountdown) / ASSESS_INTERVAL) * 100; progressFill.style.width = pct + '%'; progressFill.style.background = '#165dff'; progressText.textContent = '距离下一次评估 ' + assessCountdown + ' 秒'; }
 }
 
-// ---- 进步趋势 ----
+async function chatTriggerAssess() {
+  if (assessing) return;
+  const cutoff = Date.now() - ASSESS_INTERVAL * 1000;
+  const recent = dialogueLog.filter(d => d.ts >= cutoff);
+  if (!recent.some(d => d.role === 'user')) { renderProgress(); return; }
+  assessing = true;
+  renderProgress();
+  const dialog = recent.map(d => (d.role === 'user' ? '[学生] ' : '[教练] ') + d.text).join('\n');
+  try {
+    const resp = await fetch('/assess', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dialog, mode: 'chat' }) });
+    if (!resp.ok) throw new Error('评估失败 ' + resp.status);
+    applyChatAssessment(await resp.json());
+  } catch (err) { console.error(err); appendSys('⚠ 评估失败：' + err.message); }
+  finally { assessing = false; renderProgress(); }
+}
+
+function applyChatAssessment(result) {
+  const ts = nowTime();
+  assessments.unshift({
+    cefr_level: result.cefr_level,
+    grammar_score: result.grammar_score,
+    fluency_score: result.fluency_score,
+    vocabulary_score: result.vocabulary_score,
+    comment: result.comment, ts,
+  });
+  logToServer({ role: 'assessment', ...result });
+  renderChatAssessment();
+  for (const c of (result.corrections || [])) { corrections.unshift({ ...c, ts }); logToServer({ role: 'correction', ...c }); }
+  renderChatCorrections();
+  for (const w of (result.vocabulary || [])) { vocabulary.unshift({ ...w, ts }); logToServer({ role: 'vocabulary', ...w }); }
+  renderVocabulary();
+  loadProgress();
+}
+
+function startAssessLoop() {
+  if (assessTimer) return;
+  sessionStarted = true;
+  assessCountdown = ASSESS_INTERVAL;
+  renderProgress();
+  assessTimer = setInterval(() => {
+    if (assessing) return;
+    assessCountdown--;
+    if (assessCountdown <= 0) { chatTriggerAssess(); assessCountdown = ASSESS_INTERVAL; }
+    renderProgress();
+  }, 1000);
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(',')[1] || '');
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+function renderFileList() {
+  const fileList = document.getElementById('fileList');
+  if (!fileList) return;
+  if (uploadedFiles.length === 0) { fileList.innerHTML = ''; return; }
+  let html = '';
+  uploadedFiles.forEach((f, i) => {
+    html += '<div class="file-item"><span>📎 ' + escapeHtml(f.filename) + '</span><span class="rm" data-i="' + i + '">✕</span></div>';
+  });
+  fileList.innerHTML = html;
+  fileList.querySelectorAll('.rm').forEach(el => {
+    el.onclick = () => { uploadedFiles.splice(Number(el.dataset.i), 1); renderFileList(); };
+  });
+}
+
+function bindChatEvents() {
+  const requirementInput = document.getElementById('requirementInput');
+  const summarizeBtn = document.getElementById('summarizeBtn');
+  const summaryBox = document.getElementById('summaryBox');
+  const fileInput = document.getElementById('fileInput');
+  const confirmBtn = document.getElementById('confirmBtn');
+
+  fileInput.onchange = async () => {
+    for (const file of fileInput.files) {
+      try {
+        const dataB64 = await fileToBase64(file);
+        const resp = await fetch('/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: file.name, data_b64: dataB64 }),
+        });
+        if (resp.ok) {
+          const r = await resp.json();
+          uploadedFiles.push(r);
+          renderFileList();
+          appendSys('已挂文件：' + r.filename + '（已存知识库）');
+        } else {
+          appendSys('⚠ 上传失败：' + file.name);
+        }
+      } catch (e) { appendSys('⚠ 上传失败：' + e.message); }
+    }
+    fileInput.value = '';
+  };
+
+  summarizeBtn.onclick = async () => {
+    const requirement = requirementInput.value.trim();
+    const files = uploadedFiles.map(f => '===== ' + f.filename + ' =====\n' + f.content).join('\n\n');
+    if (!requirement && !files) { appendSys('请先写训练要求或挂文件'); return; }
+    summaryBox.textContent = '整理中…';
+    try {
+      const resp = await fetch('/summarize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requirement, files }) });
+      if (resp.ok) { const r = await resp.json(); summaryBox.textContent = r.summary || '（无）'; }
+      else summaryBox.textContent = '整理失败';
+    } catch (e) { summaryBox.textContent = '整理失败：' + e.message; }
+  };
+
+  confirmBtn.onclick = () => {
+    if (pc) return;
+    const requirement = requirementInput.value.trim();
+    const files = uploadedFiles.map(f => '===== ' + f.filename + ' =====\n' + f.content).join('\n\n');
+    const summary = summaryBox.textContent.trim();
+    let ctx = '';
+    if (requirement) ctx += '学生本次要求：\n' + requirement + '\n\n';
+    if (files) ctx += '本次聚焦的相关文件内容：\n' + files + '\n\n';
+    if (summary && summary !== '整理中…' && summary !== '整理失败') ctx += '训练要点（AI 整理）：\n' + summary;
+    pendingTrainingContext = ctx.slice(0, 15000);
+    if (!requirement && uploadedFiles.length === 0) {
+      appendSys('未填要求也未挂文件，将进行自由对话训练');
+    }
+    startSession().then(() => { startAssessLoop(); }).catch(err => {
+      console.error(err);
+      setStatus('启动失败：' + err.message, 'error');
+      appendSys('启动失败：' + err.message);
+      cleanup();
+    });
+  };
+}
+
+// =========================================================
+// 模式三：演讲教练
+// =========================================================
+let isSpeaking = false;
+let speechTimer = null;
+let speechSeconds = 0;
+let speechTranscript = [];
+
+function speechTopicInputValue() {
+  const el = document.getElementById('speechTopicInput');
+  return el ? el.value.trim() : '';
+}
+
+function startSpeechTimer() {
+  speechSeconds = 0;
+  const box = document.getElementById('speechTimerBox');
+  const num = document.getElementById('speechTimerNum');
+  box.classList.add('show');
+  num.textContent = fmtTime(0);
+  num.className = 'timer-num';
+  speechTimer = setInterval(() => {
+    speechSeconds++;
+    num.textContent = fmtTime(speechSeconds);
+    if (speechSeconds >= 60) num.className = 'timer-num warn';
+    if (speechSeconds >= 120) num.className = 'timer-num danger';
+  }, 1000);
+}
+
+function stopSpeechTimer() {
+  if (speechTimer) { clearInterval(speechTimer); speechTimer = null; }
+}
+
+function renderPolishResult(result) {
+  const polishBox = document.getElementById('polishBox');
+  if (!polishBox) return;
+  if (!result) { polishBox.innerHTML = '<div class="panel-empty">停止演讲后，这里显示「原始口述 vs 优化稿」和演讲技巧点评</div>'; return; }
+  const raw = speechTranscript.join(' ');
+  const speech = result.polished_speech || '';
+  const tips = result.delivery_tips || '';
+  let html = '';
+  if (raw) {
+    html += '<div class="polish-block"><div class="pb-title">🗣 你的原始口述</div><div class="polish-raw">' + escapeHtml(raw) + '</div></div>';
+  }
+  if (speech) {
+    html += '<div class="polish-block"><div class="pb-title">✨ 优化后的演讲稿</div><div class="polish-speech">' + escapeHtml(speech) + '</div></div>';
+  }
+  if (tips) {
+    html += '<div class="polish-block"><div class="pb-title">💡 演讲技巧点评</div><div class="polish-tips">' + escapeHtml(tips) + '</div></div>';
+  }
+  if (!raw && !speech && !tips) {
+    html = '<div class="panel-empty">梳理未返回结果，请重试</div>';
+  }
+  polishBox.innerHTML = html;
+}
+
+function bindSpeechEvents() {
+  const startSpeechBtn = document.getElementById('startSpeechBtn');
+  const stopSpeechBtn = document.getElementById('stopSpeechBtn');
+  const restartSpeechBtn = document.getElementById('restartSpeechBtn');
+  const phaseHint = document.getElementById('speechPhaseHint');
+
+  function setSpeechHint(t) {
+    phaseHint.style.display = '';
+    phaseHint.textContent = t;
+  }
+
+  startSpeechBtn.onclick = async () => {
+    if (pc) return;
+    isSpeaking = true;
+    speechTranscript = [];
+    renderPolishResult(null);
+    document.getElementById('polishBox').innerHTML = '<div class="panel-empty">演讲中…不停地说，点「停止演讲」结束</div>';
+    startSpeechBtn.disabled = true;
+    stopSpeechBtn.disabled = false;
+    restartSpeechBtn.disabled = true;
+    await startSession();
+    if (remoteAudio) remoteAudio.muted = true;  // 演讲模式教练全程静音
+    startSpeechTimer();
+    setSpeechHint('🎤 演讲进行中：自由不停地说英语，教练保持安静');
+  };
+
+  stopSpeechBtn.onclick = async () => {
+    if (!isSpeaking) return;
+    isSpeaking = false;
+    stopSpeechTimer();
+    document.getElementById('speechTimerBox').classList.remove('show');
+    stopSpeechBtn.disabled = true;
+    startSpeechBtn.disabled = false;
+    restartSpeechBtn.disabled = false;
+    setSpeechHint('✅ 演讲结束。正在梳理你的口述…');
+    const transcript = speechTranscript.join(' ').trim();
+    if (!transcript) {
+      document.getElementById('polishBox').innerHTML = '<div class="panel-empty">没有捕捉到你的口述内容，请再来一轮</div>';
+      setSpeechHint('⚠ 没有捕捉到内容，点「再来一轮」重试');
+      return;
+    }
+    try {
+      const resp = await fetch('/polish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ transcript }) });
+      if (!resp.ok) throw new Error('梳理失败 ' + resp.status);
+      const result = await resp.json();
+      renderPolishResult(result);
+      setSpeechHint('✨ 梳理完成，右侧查看优化稿 + 技巧点评');
+    } catch (err) {
+      console.error(err);
+      document.getElementById('polishBox').innerHTML = '<div class="panel-empty">⚠ 梳理失败：' + escapeHtml(err.message) + '</div>';
+      setSpeechHint('⚠ 梳理失败，点「再来一轮」重试');
+    }
+  };
+
+  restartSpeechBtn.onclick = () => {
+    isSpeaking = false;
+    stopSpeechTimer();
+    speechTranscript = [];
+    renderPolishResult(null);
+    document.getElementById('speechTimerBox').classList.remove('show');
+    startSpeechBtn.disabled = false;
+    stopSpeechBtn.disabled = true;
+    restartSpeechBtn.disabled = true;
+    setSpeechHint('');
+    phaseHint.style.display = 'none';
+  };
+}
+
+// =========================================================
+// 进步趋势（共享，按模式画不同的线）
+// =========================================================
 async function loadProgress() {
   try {
     const resp = await fetch('/progress');
@@ -400,7 +1387,22 @@ function renderProgressStats(data) {
     '<div class="progress-stat"><div class="num">' + (data.assessments || []).length + '</div><div class="lbl">评估次数</div></div>'
     + '<div class="progress-stat"><div class="num">' + (data.total_turns || 0) + '</div><div class="lbl">发言句数</div></div>'
     + '<div class="progress-stat"><div class="num">' + (data.corrections_count || 0) + '</div><div class="lbl">累计纠错</div></div>'
-    + '<div class="progress-stat"><div class="num">' + (data.vocabulary_count || 0) + '</div><div class="lbl">累计新词</div></div>';
+    + '<div class="progress-stat"><div class="num">' + (data.vocabulary_count || 0) + '</div><div class="lbl">累计' + (currentMode === 'chat' ? '新词' : '高分表达') + '</div></div>';
+}
+
+function renderCefrHistory(assessments) {
+  const box = document.getElementById('cefrHistory');
+  if (!box) return;
+  if (!assessments.length) { box.innerHTML = ''; return; }
+  const cefrList = assessments.filter(a => a.cefr_level);
+  if (!cefrList.length) { box.innerHTML = ''; return; }
+  let html = '<div class="h-title">CEFR 等级变化</div>';
+  const recent = cefrList.slice(-6);
+  for (const a of recent) {
+    const t = (a.ts || '').slice(11, 16);
+    html += '<div class="history-item"><span class="htime">' + t + '</span><span>' + escapeHtml(a.cefr_level || '?') + '</span></div>';
+  }
+  box.innerHTML = html;
 }
 
 function drawTrendChart(assessments) {
@@ -410,47 +1412,56 @@ function drawTrendChart(assessments) {
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
 
-  const n = assessments.length;
+  const isChat = currentMode === 'chat';
+  const maxScore = isChat ? 10 : 9;
+  const filtered = assessments.filter(a => isChat ? (a.grammar_score != null) : (a.fluency_coherence != null));
+  const n = filtered.length;
   if (n < 1) {
     ctx.fillStyle = '#c9cdd4';
     ctx.font = '12px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('暂无评估数据，练几次后这里会出现趋势图', W / 2, H / 2);
+    ctx.fillText('暂无评估数据，练几次后这里出现趋势图', W / 2, H / 2);
     return;
   }
 
   const padL = 28, padR = 8, padT = 10, padB = 22;
   const plotW = W - padL - padR, plotH = H - padT - padB;
 
-  // 网格 + y 轴标签
   ctx.strokeStyle = '#eee';
   ctx.fillStyle = '#86909c';
   ctx.font = '10px sans-serif';
   ctx.textAlign = 'right';
-  for (let s = 0; s <= 10; s += 2) {
-    const y = padT + plotH * (1 - s / 10);
+  for (let s = 0; s <= maxScore; s += (isChat ? 2 : 1)) {
+    const y = padT + plotH * (1 - s / maxScore);
     ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
     ctx.fillText(String(s), padL - 4, y + 3);
   }
 
-  const series = [
-    { key: 'grammar_score', color: '#f53f3f', label: '语法' },
-    { key: 'fluency_score', color: '#165dff', label: '流利' },
-    { key: 'vocabulary_score', color: '#00b42a', label: '词汇' },
-  ];
+  const series = isChat
+    ? [
+        { key: 'grammar_score', color: '#f53f3f', label: '语法' },
+        { key: 'fluency_score', color: '#165dff', label: '流利' },
+        { key: 'vocabulary_score', color: '#00b42a', label: '词汇' },
+      ]
+    : [
+        { key: 'fluency_coherence', color: '#165dff', label: 'FC' },
+        { key: 'lexical_resource', color: '#722ed1', label: 'LR' },
+        { key: 'grammatical_range_accuracy', color: '#d46b08', label: 'GRA' },
+        { key: 'pronunciation', color: '#00b42a', label: 'P' },
+      ];
   const px = i => n === 1 ? padL + plotW / 2 : padL + plotW * (i / (n - 1));
-  const py = v => padT + plotH * (1 - Math.max(0, Math.min(10, Number(v) || 0)) / 10);
+  const py = v => padT + plotH * (1 - Math.max(0, Math.min(maxScore, Number(v) || 0)) / maxScore);
 
   series.forEach(s => {
     ctx.strokeStyle = s.color;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    assessments.forEach((a, i) => {
+    filtered.forEach((a, i) => {
       const x = px(i), y = py(a[s.key]);
       i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     });
     ctx.stroke();
-    assessments.forEach((a, i) => {
+    filtered.forEach((a, i) => {
       ctx.fillStyle = s.color;
       ctx.beginPath();
       ctx.arc(px(i), py(a[s.key]), 2, 0, Math.PI * 2);
@@ -458,7 +1469,6 @@ function drawTrendChart(assessments) {
     });
   });
 
-  // 图例
   ctx.font = '10px sans-serif';
   ctx.textAlign = 'left';
   let lx = padL;
@@ -467,306 +1477,30 @@ function drawTrendChart(assessments) {
     ctx.fillRect(lx, H - 14, 8, 8);
     ctx.fillStyle = '#4e5969';
     ctx.fillText(s.label, lx + 11, H - 6);
-    lx += 42;
+    lx += 34;
   });
 }
 
-function renderCefrHistory(assessments) {
-  const box = document.getElementById('cefrHistory');
-  if (!box) return;
-  if (!assessments.length) { box.innerHTML = ''; return; }
-  let html = '<div class="h-title">CEFR 等级变化</div>';
-  const recent = assessments.slice(-6);
-  for (const a of recent) {
-    const t = (a.ts || '').slice(11, 16);
-    html += '<div class="history-item"><span class="htime">' + t + '</span><span>' + escapeHtml(a.cefr_level || '?') + '</span></div>';
-  }
-  box.innerHTML = html;
-}
-
-function renderProgress() {
-  if (assessing) { progressFill.style.width = '100%'; progressFill.style.background = '#ff7d00'; progressText.textContent = '评估中…'; }
-  else if (!sessionStarted) { progressFill.style.width = '0%'; progressFill.style.background = '#165dff'; progressText.textContent = '开始训练后，每 30 秒自动评估一次'; }
-  else { const pct = ((ASSESS_INTERVAL - assessCountdown) / ASSESS_INTERVAL) * 100; progressFill.style.width = pct + '%'; progressFill.style.background = '#165dff'; progressText.textContent = '距离下一次评估 ' + assessCountdown + ' 秒'; }
-}
-
-function logDialogue(role, text) {
-  dialogueLog.push({ role, text, ts: Date.now() });
-  const cutoff = Date.now() - 120000;
-  dialogueLog = dialogueLog.filter(d => d.ts >= cutoff);
-}
-
-async function triggerAssess() {
-  if (assessing) return;
-  const cutoff = Date.now() - ASSESS_INTERVAL * 1000;
-  const recent = dialogueLog.filter(d => d.ts >= cutoff);
-  if (!recent.some(d => d.role === 'user')) { renderProgress(); return; }
-  assessing = true;
-  renderProgress();
-  const dialog = recent.map(d => (d.role === 'user' ? '[学生] ' : '[教练] ') + d.text).join('\n');
-  try {
-    const resp = await fetch('/assess', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dialog }) });
-    if (!resp.ok) throw new Error('评估失败 ' + resp.status);
-    applyAssessment(await resp.json());
-  } catch (err) { console.error(err); appendSys('⚠ 评估失败：' + err.message); }
-  finally { assessing = false; renderProgress(); }
-}
-
-function applyAssessment(result) {
-  const ts = nowTime();
-  assessments.unshift({
-    cefr_level: result.cefr_level,
-    grammar_score: result.grammar_score,
-    fluency_score: result.fluency_score,
-    vocabulary_score: result.vocabulary_score,
-    comment: result.comment, ts,
-  });
-  logToServer({ role: 'assessment', ...result });
-  renderAssessment();
-  for (const c of (result.corrections || [])) { corrections.unshift({ ...c, ts }); logToServer({ role: 'correction', ...c }); }
-  renderCorrections();
-  for (const w of (result.vocabulary || [])) { vocabulary.unshift({ ...w, ts }); logToServer({ role: 'vocabulary', ...w }); }
-  renderVocabulary();
-  loadProgress();
-}
-
-function startAssessLoop() {
-  if (assessTimer) return;
-  sessionStarted = true;
-  assessCountdown = ASSESS_INTERVAL;
-  renderProgress();
-  assessTimer = setInterval(() => {
-    if (assessing) return;
-    assessCountdown--;
-    if (assessCountdown <= 0) { triggerAssess(); assessCountdown = ASSESS_INTERVAL; }
-    renderProgress();
-  }, 1000);
-}
-
-// ---- 课前准备 ----
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result).split(',')[1] || '');
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
-}
-
-function renderFileList() {
-  if (uploadedFiles.length === 0) { fileList.innerHTML = ''; return; }
-  let html = '';
-  uploadedFiles.forEach((f, i) => {
-    html += '<div class="file-item"><span>📎 ' + escapeHtml(f.filename) + '</span><span class="rm" data-i="' + i + '">✕</span></div>';
-  });
-  fileList.innerHTML = html;
-  fileList.querySelectorAll('.rm').forEach(el => {
-    el.onclick = () => { uploadedFiles.splice(Number(el.dataset.i), 1); renderFileList(); };
-  });
-}
-
-fileInput.onchange = async () => {
-  for (const file of fileInput.files) {
-    try {
-      const dataB64 = await fileToBase64(file);
-      const resp = await fetch('/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: file.name, data_b64: dataB64 }),
-      });
-      if (resp.ok) {
-        const r = await resp.json();
-        uploadedFiles.push(r);
-        renderFileList();
-        appendSys('已挂文件：' + r.filename + '（已存知识库）');
-      } else {
-        appendSys('⚠ 上传失败：' + file.name);
-      }
-    } catch (e) { appendSys('⚠ 上传失败：' + e.message); }
-  }
-  fileInput.value = '';
-};
-
-summarizeBtn.onclick = async () => {
-  const requirement = requirementInput.value.trim();
-  const files = uploadedFiles.map(f => '===== ' + f.filename + ' =====\n' + f.content).join('\n\n');
-  if (!requirement && !files) { appendSys('请先写训练要求或挂文件'); return; }
-  summaryBox.textContent = '整理中…';
-  try {
-    const resp = await fetch('/summarize', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requirement, files }) });
-    if (resp.ok) { const r = await resp.json(); summaryBox.textContent = r.summary || '（无）'; }
-    else summaryBox.textContent = '整理失败';
-  } catch (e) { summaryBox.textContent = '整理失败：' + e.message; }
-};
-
-// ---- 设置（API Key + 个人信息）----
-settingsBtn.onclick = () => {
-  settingsPanel.style.display = settingsPanel.style.display === 'none' ? '' : 'none';
-};
-
-function fillSettings(hasKey, profile) {
-  profile = profile || {};
-  if (!hasKey) {
-    settingsPanel.style.display = '';
-    appendSys('⚠️ 未检测到 API Key，请在设置里输入你的百炼 key');
-  }
-  apiKeyInput.placeholder = hasKey ? '已配置（留空则不改）' : '输入你的百炼 Token Plan key（sk-sp-...）';
-  profileLevel.value = profile.english_level || '';
-  profileGoal.value = profile.goal || '';
-  profileProfession.value = profile.profession || '';
-  profileHobbies.value = profile.hobbies || '';
-}
-
-saveKeyBtn.onclick = async () => {
-  const key = apiKeyInput.value.trim();
-  if (!key) { appendSys('请输入 API Key'); return; }
-  try {
-    const resp = await fetch('/save-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) });
-    if (resp.ok) { appendSys('✅ Key 已保存到 Keychain'); apiKeyInput.value = ''; }
-    else { const e = await resp.json().catch(() => ({})); appendSys('⚠️ 保存 Key 失败：' + (e.error || '')); }
-  } catch (err) { appendSys('⚠️ 保存 Key 失败：' + err.message); }
-};
-
-saveProfileBtn.onclick = async () => {
-  const profile = {
-    english_level: profileLevel.value,
-    goal: profileGoal.value,
-    profession: profileProfession.value,
-    hobbies: profileHobbies.value,
-  };
-  try {
-    const resp = await fetch('/save-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });
-    if (resp.ok) appendSys('✅ 个人信息已保存（下次对话生效）');
-    else appendSys('⚠️ 保存个人信息失败');
-  } catch (err) { appendSys('⚠️ 保存个人信息失败：' + err.message); }
-};
-
-confirmBtn.onclick = () => {
-  if (pc) return;
-  const requirement = requirementInput.value.trim();
-  const files = uploadedFiles.map(f => '===== ' + f.filename + ' =====\n' + f.content).join('\n\n');
-  const summary = summaryBox.textContent.trim();
-  let ctx = '';
-  if (requirement) ctx += '学生本次要求：\n' + requirement + '\n\n';
-  if (files) ctx += '本次聚焦的相关文件内容：\n' + files + '\n\n';
-  if (summary && summary !== '整理中…' && summary !== '整理失败') ctx += '训练要点（AI 整理）：\n' + summary;
-  pendingTrainingContext = ctx.slice(0, 15000);
-  if (!requirement && uploadedFiles.length === 0) {
-    appendSys('未填要求也未挂文件，将进行自由对话训练');
-  }
-  startSession().catch(err => {
-    console.error(err);
-    setStatus('启动失败：' + err.message, 'error');
-    appendSys('启动失败：' + err.message);
+// ============ 结束按钮 / 隐藏聊天框 ============
+endBtn.onclick = async () => {
+  if (currentMode === 'ielts') {
+    await finalizeSession();
     cleanup();
-  });
-};
-
-// ---- WebRTC ----
-function handleEvent(data, channel) {
-  let obj;
-  try { obj = JSON.parse(data); } catch { return; }
-  switch (obj.type) {
-    case 'session.created': {
-      let instructions = config.instructions;
-      if (pendingTrainingContext) instructions += '\n\n# 本次训练聚焦\n' + pendingTrainingContext;
-      const update = {
-        type: 'session.update',
-        session: {
-          modalities: ['text', 'audio'],
-          instructions: instructions,
-          voice: config.voice,
-          turn_detection: { type: 'server_vad', threshold: 0.5, silence_duration_ms: 800 },
-        },
-      };
-      if (channel && channel.readyState === 'open') channel.send(JSON.stringify(update));
-      setStatus('已连接，请说英语', 'connected');
-      appendSys('会话已建立，Coach Alex 上线。开始用英语聊吧～');
-      break;
-    }
-    case 'conversation.item.input_audio_transcription.completed': {
-      const t = (obj.transcript || '').trim();
-      if (t) { appendMessage('你', t); logToServer({ role: 'user', text: t }); logDialogue('user', t); }
-      break;
-    }
-    case 'response.audio_transcript.done': {
-      const t = (obj.transcript || '').trim();
-      if (t) { appendMessage('教练', t); logToServer({ role: 'coach', text: t }); logDialogue('coach', t); }
-      break;
-    }
-    case 'input_audio_buffer.speech_started': break;
-    case 'error': appendSys('错误：' + JSON.stringify(obj.error || obj)); break;
-  }
-}
-
-function waitIceComplete() {
-  return new Promise((resolve) => {
-    if (!pc || pc.iceGatheringState === 'complete') return resolve();
-    pc.onicegatheringstatechange = () => { if (pc.iceGatheringState === 'complete') resolve(); };
-    setTimeout(resolve, 3000);
-  });
-}
-
-async function startSession() {
-  if (pc) return;
-  confirmBtn.disabled = true;
-  setStatus('加载配置…', 'connecting');
-  try {
-    config = await fetch('/config').then(r => r.json());
-    fillSettings(config.has_key, config.profile);
-    if (config.knowledge_truncated) appendSys('⚠ 知识库过长已截断，部分内容未注入');
-    setStatus('请求麦克风权限…', 'connecting');
-
-    pc = new RTCPeerConnection({ iceServers: [] });
-    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    localStream.getAudioTracks().forEach(t => pc.addTrack(t, localStream));
-    pc.createDataChannel('oai-events');
-    pc.ondatachannel = (e) => { const ch = e.channel; ch.onmessage = (ev) => handleEvent(ev.data, ch); };
-    pc.ontrack = (e) => {
-      if (!remoteAudio) {
-        remoteAudio = document.createElement('audio');
-        remoteAudio.autoplay = true; remoteAudio.playsInline = true; remoteAudio.style.display = 'none';
-        document.body.appendChild(remoteAudio);
-      }
-      const stream = (e.streams && e.streams[0]) ? e.streams[0] : new MediaStream([e.track]);
-      remoteAudio.srcObject = stream;
-      remoteAudio.play().catch(err => { console.error('播放失败:', err); appendSys('⚠ 播放失败：' + err.message); });
-    };
-    pc.onconnectionstatechange = () => {
-      if (!pc) return;
-      if (pc.connectionState === 'connected') setStatus('已连接，请说英语', 'connected');
-      else if (['failed', 'closed', 'disconnected'].includes(pc.connectionState)) { setStatus('连接已断开', 'error'); cleanup(); }
-    };
-
-    setStatus('建立 WebRTC 连接…', 'connecting');
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    await waitIceComplete();
-    const resp = await fetch('/signal', { method: 'POST', headers: { 'Content-Type': 'application/sdp' }, body: pc.localDescription.sdp });
-    if (!resp.ok) { let m = '信令失败 ' + resp.status; try { m = (await resp.json()).error || m; } catch {} throw new Error(m); }
-    const answerSdp = await resp.text();
-    await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
-
-    endBtn.disabled = false;
-    sessionStartTime = nowTime();
-    startAssessLoop();
-  } catch (err) {
-    console.error(err);
-    setStatus('启动失败：' + err.message, 'error');
-    appendSys('启动失败：' + err.message);
+    setStatus('已结束', '');
+    setPhase('ended');
+    appendSys('训练结束。可点「随机抽题」开始下一场。');
+    loadProgress();
+  } else if (currentMode === 'chat') {
     cleanup();
+    setStatus('已结束', '');
+    appendSys('会话已结束');
+    loadProgress();
+  } else {
+    cleanup();
+    setStatus('已结束', '');
+    appendSys('演讲训练结束');
   }
-}
-
-function cleanup() {
-  if (assessTimer) { clearInterval(assessTimer); assessTimer = null; }
-  if (remoteAudio) { remoteAudio.pause(); remoteAudio.srcObject = null; remoteAudio = null; }
-  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-  if (pc) { try { pc.close(); } catch {} pc = null; }
-  confirmBtn.disabled = false;
-  endBtn.disabled = true;
-  if (!statusText.textContent.startsWith('启动失败') && !statusText.textContent.startsWith('连接已断开')) setStatus('已结束', '');
-}
+};
 
 chatToggleBtn.onclick = () => {
   const hidden = chatPanel.style.display === 'none';
@@ -774,26 +1508,10 @@ chatToggleBtn.onclick = () => {
   chatToggleBtn.textContent = hidden ? '隐藏聊天框' : '显示聊天框';
 };
 
-endBtn.onclick = async () => {
-  if (sessionStarted) {
-    appendSys('正在生成训练报告…');
-    try {
-      const resp = await fetch('/report', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ start_time: sessionStartTime, end_time: nowTime(), dialogue: dialogueLog, assessments, corrections, vocabulary }),
-      });
-      if (resp.ok) { const r = await resp.json(); appendSys('✅ 报告已保存：' + r.path); }
-      else appendSys('⚠ 报告生成失败');
-    } catch (err) { console.error(err); appendSys('⚠ 报告生成失败：' + err.message); }
-  }
-  cleanup();
-  setStatus('已结束', '');
-  appendSys('会话已结束');
-  loadProgress();
-};
-
-// 页面加载时先拉一次进步趋势
-loadProgress();
+// ============ 入口：默认显示模式选择页 ============
+modePicker.querySelectorAll('.mode-card').forEach(card => {
+  card.onclick = () => selectMode(card.dataset.mode);
+});
 </script>
 </body>
 </html>
